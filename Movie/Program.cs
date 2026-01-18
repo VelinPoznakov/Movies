@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Movie.Data;
+using Movie.Repositories;
+using Movie.Repositories.Interfaces;
 
 namespace Movie
 {
@@ -11,15 +13,17 @@ namespace Movie
 
             builder.Services.AddControllers();
 
+            builder.Services.AddScoped<IDirectorRepository, DirectorRepository>();
+            builder.Services.AddScoped<IGenreRepository, GenreRepository>();
+            builder.Services.AddScoped<IGenreRepository, GenreRepository>();
+
             builder.Services.AddDbContext<MovieDbContext>(options =>
                 options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
             var app = builder.Build();
 
-            // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
-                app.MapOpenApi();
             }
 
             app.UseHttpsRedirection();
