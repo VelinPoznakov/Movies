@@ -2,6 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using Movie.Data;
 using Movie.Repositories;
 using Movie.Repositories.Interfaces;
+using Movie.Services;
+using Movie.Services.Interfases;
 
 namespace Movie
 {
@@ -16,6 +18,13 @@ namespace Movie
             builder.Services.AddScoped<IDirectorRepository, DirectorRepository>();
             builder.Services.AddScoped<IGenreRepository, GenreRepository>();
             builder.Services.AddScoped<IGenreRepository, GenreRepository>();
+
+            builder.Services.AddScoped<IDirectorService, DirectorService>();
+            builder.Services.AddScoped<IGenreService, GenreService>();
+            builder.Services.AddScoped<IMovieService, MovieService>();
+
+            builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+
 
             builder.Services.AddDbContext<MovieDbContext>(options =>
                 options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
