@@ -1,3 +1,5 @@
+using Microsoft.EntityFrameworkCore;
+using Movie.Data;
 
 namespace Movie
 {
@@ -8,6 +10,9 @@ namespace Movie
             var builder = WebApplication.CreateBuilder(args);
 
             builder.Services.AddControllers();
+
+            builder.Services.AddDbContext<MovieDbContext>(options =>
+                options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
             var app = builder.Build();
 
