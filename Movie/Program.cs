@@ -4,6 +4,9 @@ using Movie.Repositories;
 using Movie.Repositories.Interfaces;
 using Movie.Services;
 using Movie.Services.Interfases;
+using AutoMapper;
+
+
 
 namespace Movie
 {
@@ -14,16 +17,17 @@ namespace Movie
             var builder = WebApplication.CreateBuilder(args);
 
             builder.Services.AddControllers();
+            builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+
 
             builder.Services.AddScoped<IDirectorRepository, DirectorRepository>();
             builder.Services.AddScoped<IGenreRepository, GenreRepository>();
-            builder.Services.AddScoped<IGenreRepository, GenreRepository>();
+            builder.Services.AddScoped<IMovieRepositiory, MovieRepositiory>();
 
             builder.Services.AddScoped<IDirectorService, DirectorService>();
             builder.Services.AddScoped<IGenreService, GenreService>();
             builder.Services.AddScoped<IMovieService, MovieService>();
 
-            builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
