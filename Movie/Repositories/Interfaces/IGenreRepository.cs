@@ -9,7 +9,7 @@ namespace Movie.Repositories.Interfaces
     public interface IGenreRepository
     {
         Task<List<Genre>> GetAllAsync();
-        Task<Genre?> GetGenreByIdAsync(int id);
+        Task<Genre?> GetGenreByIdAsync(long id);
         Task AddGenreAsync(Genre genre);
         Task UpdateAsync(Genre genre);
         Task Delete(Genre genre);

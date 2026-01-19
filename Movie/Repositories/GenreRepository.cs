@@ -35,7 +35,7 @@ namespace Movie.Repositories
             return await _context.Genres.ToListAsync();
         }
 
-        public async Task<Genre?> GetGenreByIdAsync(int id)
+        public async Task<Genre?> GetGenreByIdAsync(long id)
         {
             return await _context.Genres.FindAsync(id);
         }

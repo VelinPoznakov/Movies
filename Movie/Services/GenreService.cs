@@ -20,15 +20,16 @@ namespace Movie.Services
             _mapper = mapper;
         }
 
-        public async Task CreateGenreAsync(CreateGenreRequestDto dto)
+        public async Task<GenreResponse> CreateGenreAsync(CreateGenreRequestDto dto)
         {
             var genre = _mapper.Map<Genre>(dto);
 
             await _genreRepository.AddGenreAsync(genre);
 
+            return _mapper.Map<GenreResponse>(genre);
         }
 
-        public async Task DeleteGenreAsync(int id)
+        public async Task DeleteGenreAsync(long id)
         {
             var genre = await _genreRepository.GetGenreByIdAsync(id)
                 ?? throw new Exception("Genre not found");
@@ -43,14 +44,14 @@ namespace Movie.Services
             return _mapper.Map<List<GenreResponse>>(genres);
         }
 
-        public async Task<GenreResponse> GetGenreByIdAsync(int id)
+        public async Task<GenreResponse> GetGenreByIdAsync(long id)
         {
             var genre = await _genreRepository.GetGenreByIdAsync(id);
 
             return _mapper.Map<GenreResponse>(genre);
         }
 
-        public async Task<GenreResponse> UpdateGenreAsync(int id, UpdateGenreRequestDto dto)
+        public async Task<GenreResponse> UpdateGenreAsync(long id, UpdateGenreRequestDto dto)
         {
             var genre = await _genreRepository.GetGenreByIdAsync(id)
                 ?? throw new Exception("Genre not found");
