@@ -5,10 +5,8 @@ using System.Threading.Tasks;
 
 namespace Movie.Dtos.Auth
 {
-    public class NewUserDto
+    public class TokenDto
     {
-        public string Username { get; set; } = string.Empty;
-        public string Email { get; set; } = string.Empty;
         public string Token { get; set; } = string.Empty;
     }
 }

@@ -11,77 +11,31 @@ namespace Movie.Controllers
     [Route("api/[controller]")]
     public class AccountController: ControllerBase
     {
-        private readonly UserManager<AppUser> _userManager;
-        private readonly SignInManager<AppUser> _signInManager;
-        private readonly ITokenService _tokenService;
+        private readonly IAuthService _authService;
 
-        public AccountController(UserManager<AppUser> userManager, SignInManager<AppUser> signInManager, ITokenService tokenService)
+        public AccountController(IAuthService authService)
         {
-            _userManager = userManager;
-            _signInManager = signInManager;
-            _tokenService = tokenService;
+            _authService = authService;
         }
-
 
         [HttpPost("login")]
         public async Task<IActionResult> Login(LoginUserDto request)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-            var user = await _userManager.FindByNameAsync(request.Username);
-
-            if(user == null) return Unauthorized("Invalid username or password");
-
-            var result  = await _signInManager.CheckPasswordSignInAsync(user, request.Password, false);
-
-            if(!result.Succeeded) return Unauthorized("Invalid username or password");
-
-            var roles = await _userManager.GetRolesAsync(user);
-
-            return Ok(
-                new NewUserDto
-                {
-                    Username = user.UserName ?? "",
-                    Email = user.Email ?? "",
-                    Token = _tokenService.CreateToken(user, roles)
-
-                }
-            );
-
-
+            var res = await _authService.LoginUser(request);
+            if (res == null) return BadRequest("failed");
+            return Ok(res);
         }
 
         [HttpPost("register")]
-        public async Task<IActionResult> Register([FromBody] RegisterDto request)
+        public async Task<IActionResult> Register(RegisterDto request)
         {
-            if (!ModelState.IsValid) return BadRequest(ModelState);
-
-            var appUser = new AppUser
-            {
-                UserName = request.Username,
-                Email = request.Email
-            };
-
-            var createUser = await _userManager.CreateAsync(appUser, request.Password);
-            if (!createUser.Succeeded)
-                return BadRequest(createUser.Errors);
-
-            var roleResult = await _userManager.AddToRoleAsync(appUser, "User");
-            if (!roleResult.Succeeded)
-                return StatusCode(500, roleResult.Errors);
-
-            var roles = await _userManager.GetRolesAsync(appUser);
-
-            return Ok(new NewUserDto
-            {
-                Username = appUser.UserName ?? "",
-                Email = appUser.Email ?? "",
-                Token = _tokenService.CreateToken(appUser, roles) 
-            });
+            var res = await _authService.RegisterUser(request);
+            if (res == null) return BadRequest("failed");
+            return Ok(res);
         }
 
+
+        
 
 
         
