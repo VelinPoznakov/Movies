@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Movie.Dtos.Genre.Request;
 using Movie.Dtos.Genre.Response;
-using Movie.Services.Interfases;
+using Movie.Services.Interfaces;
 
 namespace Movie.Controllers
 {

@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Movie.Dtos.Movies.Request;
 using Movie.Dtos.Movies.Response;
-using Movie.Services.Interfases;
+using Movie.Services.Interfaces;
 
 namespace Movie.Controllers
 {

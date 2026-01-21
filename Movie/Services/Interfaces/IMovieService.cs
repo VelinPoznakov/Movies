@@ -2,7 +2,7 @@
 using Movie.Dtos.Movies.Request;
 using Movie.Dtos.Movies.Response;
 
-namespace Movie.Services.Interfases
+namespace Movie.Services.Interfaces
 {
     public interface IMovieService
     {

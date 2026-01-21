@@ -7,7 +7,7 @@ using Movie.Dtos.Director.Request;
 using Movie.Dtos.Director.Response;
 using Movie.Entities;
 using Movie.Repositories.Interfaces;
-using Movie.Services.Interfases;
+using Movie.Services.Interfaces;
 
 namespace Movie.Services
 {

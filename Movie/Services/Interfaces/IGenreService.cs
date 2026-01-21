@@ -2,7 +2,7 @@ using Movie.Dtos.Genre.Request;
 using Movie.Dtos.Genre.Response;
 
 
-namespace Movie.Services.Interfases
+namespace Movie.Services.Interfaces
 {
     public interface IGenreService
     {

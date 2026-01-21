@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using Movie.Dtos.Director.Request;
 using Movie.Dtos.Director.Response;
 
-namespace Movie.Services.Interfases
+namespace Movie.Services.Interfaces
 {
     public interface IDirectorService
     {
