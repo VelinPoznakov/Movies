@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -33,7 +34,11 @@ namespace Movie.Controllers
         [Authorize]
         public async Task<IActionResult> CreateMovieAsync([FromBody] CreateMovieRequest request)
         {
-            var result = await _service.CreateMovie(request);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? throw new UnauthorizedAccessException("User is not authenticated");
+
+            var result = await _service.CreateMovie(request, userId)
+                ?? throw new Exception("Error creating movie");
+            
             return result == null ? NotFound() : Ok(result);
         }
 

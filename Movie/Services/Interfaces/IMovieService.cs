@@ -8,7 +8,7 @@ namespace Movie.Services.Interfaces
     {
         Task<List<MovieResponseDto>> GetAllMovies();
         Task<MovieResponseDto> GetMovieById(long id);
-        Task<MovieResponseDto> CreateMovie(CreateMovieRequest dto);
+        Task<MovieResponseDto> CreateMovie(CreateMovieRequest dto, string userId);
         Task<MovieResponseDto> UpdateMovie(long id, UpdateMovieRequestDto dto);
         Task DeleteMovie(long id);
     }

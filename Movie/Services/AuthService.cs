@@ -39,7 +39,7 @@ namespace Movie.Services
             if(!result.Succeeded) 
                 throw new InvalidOperationException("User registration failed.");
                 
-            var token = GenerateTockenString(user.UserName!);
+            var token = GenerateTockenString(user.UserName!, user.Id);
             var refreshToken = GenerateRefreshToken();
 
             user.RefreshToken = refreshToken;
@@ -62,7 +62,7 @@ namespace Movie.Services
             if(!result) 
                 throw new InvalidOperationException("Invalid password.");
 
-            var token = GenerateTockenString(user.UserName!);
+            var token = GenerateTockenString(user.UserName!, user.Id);
             var refreshToken = GenerateRefreshToken();
 
             user.RefreshToken = refreshToken;
@@ -93,7 +93,7 @@ namespace Movie.Services
             if(user == null || user.RefreshToken != request.RefreshToken || user.RefreshTokenExpiryTime <= DateTime.UtcNow)
                 throw new InvalidOperationException("Invalid refresh token.");
 
-            var token = GenerateTockenString(user.UserName!);
+            var token = GenerateTockenString(user.UserName!, user.Id);
             var refreshToken = GenerateRefreshToken();
 
             user.RefreshToken = refreshToken;
@@ -131,11 +131,12 @@ namespace Movie.Services
             return new JwtSecurityTokenHandler().ValidateToken(token, validate, out _);
         }
 
-        private string GenerateTockenString(string username)
+        private string GenerateTockenString(string username, string userId)
         {
             var claims = new List<Claim>
             {
               new Claim(ClaimTypes.Name, username),
+              new Claim(ClaimTypes.NameIdentifier, userId),
               new Claim(ClaimTypes.Role, "User"),
             };
 

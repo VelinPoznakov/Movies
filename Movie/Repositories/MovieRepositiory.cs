@@ -37,6 +37,7 @@ namespace Movie.Repositories
             return await _context.Movies
                 .Include(m => m.Director)
                 .Include(m => m.Genre)
+                .Include(m => m.User)
                 .ToListAsync();
         }
 

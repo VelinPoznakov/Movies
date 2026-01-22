@@ -22,7 +22,7 @@ namespace Movie.Services
             _genreRepository = genreRepository;
             _mapper = mapper;
         }
-        public async Task<MovieResponseDto> CreateMovie(CreateMovieRequest dto)
+        public async Task<MovieResponseDto> CreateMovie(CreateMovieRequest dto, string userId)
         {
             var directorName = dto.DirectorName.Trim();
             var genreName = dto.GenreName.Trim();
@@ -33,6 +33,8 @@ namespace Movie.Services
             }
 
             var movie = _mapper.Map<MovieEntity>(dto);
+
+            movie.UserId = userId;
 
             var director = await _directorRepository.GetDirectorByNameAsync(directorName);
             var genre = await _genreRepository.GetGenreByNameAsync(genreName);
