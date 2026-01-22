@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Movie.Dtos.Movies.Request;
 using Movie.Dtos.Movies.Response;
@@ -29,6 +30,7 @@ namespace Movie.Controllers
             => Ok(await _service.GetMovieById(id));
 
         [HttpPost]
+        [Authorize]
         public async Task<IActionResult> CreateMovieAsync([FromBody] CreateMovieRequest request)
         {
             var result = await _service.CreateMovie(request);
@@ -36,6 +38,7 @@ namespace Movie.Controllers
         }
 
         [HttpPut("{id:long}")]
+        [Authorize]
         public async Task<IActionResult> UpdateMovieAsync(long id, [FromBody] UpdateMovieRequestDto request)
         {
             var result = await _service.UpdateMovie(id, request)
@@ -45,6 +48,7 @@ namespace Movie.Controllers
         }
 
         [HttpDelete("{id:long}")]
+        [Authorize]
         public async Task<IActionResult> DeleteMovieAsync(long id)
         {
             await _service.DeleteMovie(id);

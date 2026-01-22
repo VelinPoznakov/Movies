@@ -1,7 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Movie.Dtos.Director.Request;
 using Movie.Dtos.Director.Response;
@@ -29,6 +26,7 @@ namespace Movie.Controllers
             => Ok(await _service.GetDirectorByIdAsync(id));
 
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> CreateDirectorAsync([FromBody] CreateDirectorRequestDto request)
         {
             var result = await _service.CreateDirectorAsync(request);
@@ -36,10 +34,14 @@ namespace Movie.Controllers
         }
 
         [HttpPut("{id:long}")]
+        [Authorize(Roles = "Admin")]
+
         public async Task<IActionResult> UpdateDirectorAsync(long id, [FromBody] UpdateDirectorRequestDto request)
             => Ok(await _service.UpdateDirectorAsync(id, request));
 
         [HttpDelete("{id:long}")]
+        [Authorize(Roles = "Admin")]
+
         public async Task<IActionResult> DeleteDirectorAsync(long id)
         {
             await _service.DeleteDirectorAsync(id);

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Movie.Dtos.Genre.Request;
 using Movie.Dtos.Genre.Response;
@@ -25,6 +26,8 @@ namespace Movie.Controllers
             => Ok(await _service.GetGenreByIdAsync(id));
 
         [HttpPost]
+        [Authorize(Roles = "Admin")]
+
         public async Task<IActionResult> CreateGenreAsync([FromBody] CreateGenreRequestDto request)
         {
             var result = await _service.CreateGenreAsync(request);
@@ -32,6 +35,8 @@ namespace Movie.Controllers
         }
 
         [HttpPut("{id:long}")]
+        [Authorize(Roles = "Admin")]
+
         public async Task<IActionResult> UpdateGenreAsync(long id, [FromBody] UpdateGenreRequestDto request)
         {
             var result = await _service.UpdateGenreAsync(id, request)
@@ -41,6 +46,8 @@ namespace Movie.Controllers
         }
 
         [HttpDelete("{id:long}")]
+        [Authorize(Roles = "Admin")]
+
         public async Task<IActionResult> DeleteGenreAsync(long id)
         {
             await _service.DeleteGenreAsync(id);
