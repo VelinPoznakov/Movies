@@ -5,10 +5,9 @@ using System.Threading.Tasks;
 
 namespace Movie.Dtos.Auth
 {
-    public class TokenDto
+    public class RefreshTokenDto
     {
-        public bool IsLoggedIn { get; set; } = false;
         public string Token { get; set; } = string.Empty;
-        public string RefreshToken { get; internal set; } = string.Empty;
+        public string RefreshToken { get; set; } = string.Empty;
     }
 }

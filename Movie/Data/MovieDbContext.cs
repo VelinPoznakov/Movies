@@ -14,29 +14,7 @@ namespace Movie.Data
 
         public DbSet<Genre> Genres => Set<Genre>();
         public DbSet<Director> Directors => Set<Director>();
+        public DbSet<AppUser> AppUsers => Set<AppUser>();
 
-        protected override void OnModelCreating(ModelBuilder builder)
-        {
-            base.OnModelCreating(builder);
-
-            List<IdentityRole> roles = new List<IdentityRole>
-            {
-                new IdentityRole
-                {
-                    Id = "1",
-                    Name = "Admin",
-                    NormalizedName = "ADMIN",
-                        ConcurrencyStamp = "1"
-                },
-                new IdentityRole
-                {
-                    Id = "2",
-                    Name = "User",
-                    NormalizedName = "USER",
-                    ConcurrencyStamp = "2"
-                }
-            };
-            builder.Entity<IdentityRole>().HasData(roles);
-        }
     }
 }

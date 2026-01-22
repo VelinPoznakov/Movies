@@ -10,6 +10,6 @@ namespace Movie.Services.Interfaces
     {
         Task<TokenDto> RegisterUser(RegisterDto request);
         Task<TokenDto> LoginUser(LoginUserDto request);
-        string GenerateTockenString(string username);
+        Task<TokenDto> RefreshToken(RefreshTokenDto request);
     }
 }

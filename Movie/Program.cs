@@ -75,7 +75,6 @@ namespace Movie
             builder.Services.AddScoped<IDirectorService, DirectorService>();
             builder.Services.AddScoped<IGenreService, GenreService>();
             builder.Services.AddScoped<IMovieService, MovieService>();
-            builder.Services.AddScoped<ITokenService, TokenService>();
             builder.Services.AddScoped<IAuthService, AuthService>();
 
 

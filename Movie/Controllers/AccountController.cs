@@ -22,8 +22,9 @@ namespace Movie.Controllers
         public async Task<IActionResult> Login(LoginUserDto request)
         {
             var res = await _authService.LoginUser(request);
-            if (res == null) return BadRequest("failed");
-            return Ok(res);
+            if(res.IsLoggedIn) return Ok(res);
+
+            return Unauthorized();
         }
 
         [HttpPost("register")]
@@ -32,6 +33,15 @@ namespace Movie.Controllers
             var res = await _authService.RegisterUser(request);
             if (res == null) return BadRequest("failed");
             return Ok(res);
+        }
+
+        [HttpPost("refresh-token")]
+        public async Task<IActionResult> RefreshToken(RefreshTokenDto request)
+        {
+            var loginResult = await _authService.RefreshToken(request);
+            if(loginResult.IsLoggedIn) return Ok(loginResult);
+
+            return Unauthorized();
         }
 
 

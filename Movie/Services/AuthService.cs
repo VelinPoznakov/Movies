@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity;
@@ -34,7 +35,7 @@ namespace Movie.Services
             var result = await _userManager.CreateAsync(user, request.Password);
             if(!result.Succeeded) 
                 throw new InvalidOperationException("User registration failed.");
-
+                
             var token = GenerateTockenString(user.UserName!);
             return new TokenDto{ Token = token };
         }
@@ -52,11 +53,57 @@ namespace Movie.Services
                 throw new InvalidOperationException("Invalid password.");
 
             var token = GenerateTockenString(user.UserName!);
+            var refreshToken = GenerateRefreshToken();
 
-            return new TokenDto{ Token = token };
+            user.RefreshToken = refreshToken;
+            user.RefreshTokenExpiryTime = DateTime.UtcNow.AddHours(12);
+            user.LastLogInAt = DateTime.UtcNow;
+            await _userManager.UpdateAsync(user);
+
+            return new TokenDto{ Token = token, RefreshToken = refreshToken, IsLoggedIn = true };
         }
 
-        public string GenerateTockenString(string username)
+        public async Task<TokenDto> RefreshToken(RefreshTokenDto request)
+        {
+            var principal = GetTokenPrincipal(request.Token);
+            
+            var response = new TokenDto();
+            if(principal?.Identity?.Name is null) throw new InvalidOperationException("Invalid token.");
+
+            var user = await _userManager.FindByNameAsync(principal.Identity.Name);
+
+            if(user == null || user.RefreshToken != request.RefreshToken || user.RefreshTokenExpiryTime <= DateTime.UtcNow)
+                throw new InvalidOperationException("Invalid refresh token.");
+
+            var token = GenerateTockenString(user.UserName!);
+            var refreshToken = GenerateRefreshToken();
+
+            user.RefreshToken = refreshToken;
+            user.RefreshTokenExpiryTime = DateTime.UtcNow.AddHours(12);
+            user.LastLogInAt = DateTime.UtcNow;
+            await _userManager.UpdateAsync(user);
+
+            return new TokenDto{ Token = token, RefreshToken = refreshToken, IsLoggedIn = true };
+        }
+
+        private ClaimsPrincipal? GetTokenPrincipal(string token)
+        {
+            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:SigningKey"]!));
+
+            var validate = new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidIssuer = _config["JWT:Issuer"],
+                ValidateAudience = true,
+                ValidAudience = _config["JWT:Audience"],
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = securityKey
+            };
+
+            return new JwtSecurityTokenHandler().ValidateToken(token, validate, out _);
+        }
+
+        private string GenerateTockenString(string username)
         {
             var claims = new List<Claim>
             {
@@ -64,12 +111,12 @@ namespace Movie.Services
               new Claim(ClaimTypes.Role, "User"),
             };
 
-            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"] ?? ""));
+            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:SigningKey"]!));
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha512Signature);
 
             var securityToken = new JwtSecurityToken(
                 claims:claims,
-                expires: DateTime.Now.AddMinutes(60),
+                expires: DateTime.UtcNow.AddSeconds(60),
                 issuer: _config["Jwt:Issuer"],
                 audience: _config["Jwt:Audience"],
                 signingCredentials: credentials
@@ -78,6 +125,18 @@ namespace Movie.Services
             string token = new JwtSecurityTokenHandler().WriteToken(securityToken);
             return token;
         }
-        
-    }
+
+        private string GenerateRefreshToken()
+        {
+            var randomNumber = new byte[64];
+
+            using (var numberGenerator = RandomNumberGenerator.Create())
+            {
+                numberGenerator.GetBytes(randomNumber);
+            }
+
+            return Convert.ToBase64String(randomNumber);
+
+        }
+  }
 }
