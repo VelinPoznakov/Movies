@@ -37,7 +37,14 @@ namespace Movie.Services
                 throw new InvalidOperationException("User registration failed.");
                 
             var token = GenerateTockenString(user.UserName!);
-            return new TokenDto{ Token = token };
+            var refreshToken = GenerateRefreshToken();
+
+            user.RefreshToken = refreshToken;
+            user.RefreshTokenExpiryTime = DateTime.UtcNow.AddHours(12);
+            user.LastLogInAt = DateTime.UtcNow;
+            await _userManager.UpdateAsync(user);
+
+            return new TokenDto{ Token = token, RefreshToken = refreshToken, IsLoggedIn = true };
         }
 
         public async Task<TokenDto> LoginUser(LoginUserDto request)
