@@ -56,6 +56,18 @@ namespace Movie.Controllers
             return Ok(new { Message = "Logged out successfully" });
         }
 
+        [HttpGet("profile")]
+        [Authorize]
+        public async Task<IActionResult> GetProfile()
+        {
+            var username = User.Identity?.Name;
+            if (username == null) return Unauthorized();
+
+            var result = await _authService.GetProfileAsync(username);
+            
+            return result == null ? NotFound() : Ok(result);
+        }
+
 
         
 

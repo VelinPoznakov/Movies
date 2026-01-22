@@ -6,6 +6,7 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using AutoMapper;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 using Movie.Dtos.Auth;
@@ -18,10 +19,12 @@ namespace Movie.Services
     {
         private readonly UserManager<AppUser> _userManager;
         private readonly IConfiguration _config;
-        public AuthService(UserManager<AppUser> userManager, IConfiguration config)
+        private readonly IMapper _mapper;
+        public AuthService(UserManager<AppUser> userManager, IConfiguration config, IMapper mapper)
         {
             _config = config;
             _userManager = userManager;
+            _mapper = mapper;
         }
 
         public async Task<TokenDto> RegisterUser(RegisterDto request)
@@ -68,6 +71,15 @@ namespace Movie.Services
             await _userManager.UpdateAsync(user);
 
             return new TokenDto{ Token = token, RefreshToken = refreshToken, IsLoggedIn = true };
+        }
+
+        public async Task<ProfileResponseDto> GetProfileAsync(string username)
+        {
+            var user = await _userManager.FindByNameAsync(username);
+            if (user == null) throw new InvalidOperationException("User not found.");
+
+            return _mapper.Map<ProfileResponseDto>(user);
+
         }
 
         public async Task<TokenDto> RefreshToken(RefreshTokenDto request)

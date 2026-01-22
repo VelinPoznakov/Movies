@@ -18,6 +18,7 @@ namespace Movie.Dtos.Movies.Response
         public double Rating { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime LastUpdatedAt { get; set; }
+        public string UserId { get; set; } = string.Empty;
     }
 }
 
