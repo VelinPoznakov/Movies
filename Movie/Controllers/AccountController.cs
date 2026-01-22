@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -42,6 +43,17 @@ namespace Movie.Controllers
             if(loginResult.IsLoggedIn) return Ok(loginResult);
 
             return Unauthorized();
+        }
+
+        [Authorize]
+        [HttpPost("logout")]
+        public async Task<IActionResult> Logout()
+        {
+            var username = User.Identity?.Name;
+            if(username == null) return Unauthorized();
+
+            await _authService.LogoutUserAsync(username);
+            return Ok(new { Message = "Logged out successfully" });
         }
 
 

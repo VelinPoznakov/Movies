@@ -93,6 +93,16 @@ namespace Movie.Services
             return new TokenDto{ Token = token, RefreshToken = refreshToken, IsLoggedIn = true };
         }
 
+        public async Task LogoutUserAsync(string username)
+        {
+            var user = await _userManager.FindByNameAsync(username);
+            if(user == null) throw new InvalidOperationException("User not found.");
+
+            user.RefreshToken = null;
+            user.RefreshTokenExpiryTime = DateTime.UtcNow;
+            await _userManager.UpdateAsync(user);
+        }
+
         private ClaimsPrincipal? GetTokenPrincipal(string token)
         {
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:SigningKey"]!));
