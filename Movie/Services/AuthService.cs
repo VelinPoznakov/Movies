@@ -74,7 +74,6 @@ namespace Movie.Services
         {
             var principal = GetTokenPrincipal(request.Token);
             
-            var response = new TokenDto();
             if(principal?.Identity?.Name is null) throw new InvalidOperationException("Invalid token.");
 
             var user = await _userManager.FindByNameAsync(principal.Identity.Name);
