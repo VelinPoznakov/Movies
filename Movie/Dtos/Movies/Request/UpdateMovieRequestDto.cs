@@ -32,6 +32,7 @@ public class UpdateMovieRequestProfile : Profile
             .ForMember(d => d.GenreId, opt => opt.Ignore())
             .ForMember(d => d.CreatedAt, opt => opt.Ignore())
             .ForMember(d => d.LastUpdatedAt, opt => opt.Ignore())
-            .ForMember(d => d.ReleaseDate, opt => opt.Ignore()); // string -> DateTime
+            .ForMember(d => d.ReleaseDate, opt => opt.Ignore())
+            .ForMember(d => d.Comments, opt => opt.Ignore());
     }
 }

@@ -29,6 +29,7 @@ namespace Movie.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> CreateDirectorAsync([FromBody] CreateDirectorRequestDto request)
         {
+            
             var result = await _service.CreateDirectorAsync(request);
             return result == null ? NotFound() : Ok(result);
         }

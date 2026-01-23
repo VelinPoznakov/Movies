@@ -28,7 +28,8 @@ public class CreateMovieRequestProfile : Profile
             .ForMember(d => d.GenreId, opt => opt.Ignore())
             .ForMember(d => d.CreatedAt, opt => opt.Ignore())
             .ForMember(d => d.LastUpdatedAt, opt => opt.Ignore())
-            .ForMember(d => d.ReleaseDate, opt => opt.Ignore()); // because it's string in DTO
+            .ForMember(d => d.ReleaseDate, opt => opt.Ignore())
+            .ForMember(d => d.Comments, opt => opt.Ignore());
     }
 }
 

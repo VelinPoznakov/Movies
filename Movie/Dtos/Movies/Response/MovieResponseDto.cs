@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Movie.Dtos.Comments.Response;
 using Movie.Dtos.Director.Response;
 using Movie.Dtos.Genre.Response;
 using Movie.Dtos.Movies.Request;
@@ -19,6 +20,7 @@ namespace Movie.Dtos.Movies.Response
         public DateTime CreatedAt { get; set; }
         public DateTime LastUpdatedAt { get; set; }
         public string UserId { get; set; } = string.Empty;
+        public List<CommentResponseDto>? Comments { get; set; }
     }
 }
 

@@ -13,7 +13,5 @@ namespace Movie.Entities
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime ModifiedAt { get; set; } = DateTime.UtcNow;
-        public string? UserId { get; set; }
-        public AppUser? User { get; set; }
     }
 }
