@@ -9,7 +9,7 @@ namespace Movie.Services.Interfaces
 {
     public interface ICommentService
     {
-        Task<CommentResponseDto> AddCommentAsync(CreateCommentsRequestDto dto, string userId);
+        Task<CommentResponseDto> AddCommentAsync(CreateCommentsRequestDto dto, string userId, long movieId);
         Task<CommentResponseDto> UpdateCommentAsync(long commentsId, UpdateCommentRequestDto dto);
         Task DeleteCommentAsync(long commentId);
         Task<List<CommentResponseDto>> GetCommentsByMovieId(long movieId);

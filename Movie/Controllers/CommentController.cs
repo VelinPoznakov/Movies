@@ -23,13 +23,13 @@ namespace Movie.Controllers
         public async Task<ActionResult<List<CommentResponseDto>>> GetComments([FromRoute] long movieId)
             => Ok(await _commentService.GetCommentsByMovieId(movieId));
 
-        [HttpPost]
-        public async Task<IActionResult> AddCommentAsync([FromBody] CreateCommentsRequestDto dto)
+        [HttpPost("{movieId:long}")]
+        public async Task<IActionResult> AddCommentAsync(long movieId, [FromBody] CreateCommentsRequestDto dto)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)
                 ?? throw new UnauthorizedAccessException("User ID not found in token.");
 
-            var result = await _commentService.AddCommentAsync(dto, userId);
+            var result = await _commentService.AddCommentAsync(dto, userId, movieId);
 
             return result == null ? NotFound() : Ok(result);
         }

@@ -27,6 +27,6 @@ namespace Movie.Entities
 
         public string? UserId { get; set; }
         public AppUser? User { get; set; }
-        public List<Comments> Comments { get; set; } = new();
+        public List<Comment> Comments { get; set; } = new();
     }
 }

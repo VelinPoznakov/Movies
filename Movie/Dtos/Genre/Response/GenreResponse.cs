@@ -10,11 +10,3 @@ namespace Movie.Dtos.Genre.Response
         public string Name { get; set; } = string.Empty;
     }
 }
-
-public class GenreResponseProfile : Profile
-{
-    public GenreResponseProfile()
-    {
-        CreateMap<Genre, GenreResponse>();
-    }
-}

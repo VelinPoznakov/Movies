@@ -15,7 +15,7 @@ namespace Movie.Data
         public DbSet<Genre> Genres => Set<Genre>();
         public DbSet<Director> Directors => Set<Director>();
         public DbSet<AppUser> AppUsers => Set<AppUser>();
-        public DbSet<Comments> Comments => Set<Comments>();
+        public DbSet<Comment> Comments => Set<Comment>();
 
     }
 }

@@ -9,12 +9,3 @@ namespace Movie.Dtos.Genre.Request
         public string Name { get; set; } = string.Empty;
     }
 }
-
-public class CreateGenreRequestProfile : Profile
-{
-    public CreateGenreRequestProfile()
-    {
-        CreateMap<CreateGenreRequestDto, Genre>()
-            .ForMember(d => d.Id, opt => opt.Ignore());
-    }
-}

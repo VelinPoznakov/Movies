@@ -13,12 +13,3 @@ namespace Movie.Dtos.Director.Request
         public string Name { get; set; } = string.Empty;
     }
 }
-
-public class CreateDirectorRequestProfile: Profile
-{
-    public CreateDirectorRequestProfile()
-    {
-        CreateMap<CreateDirectorRequestDto, Director>()
-            .ForMember(d => d.Id, opt => opt.Ignore());
-    }
-}

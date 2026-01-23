@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Movie.Services.Interfaces;
+using AutoMapper;
 
 
 
@@ -20,7 +21,6 @@ namespace Movie
             var builder = WebApplication.CreateBuilder(args);
 
             builder.Services.AddControllers();
-            builder.Services.AddAutoMapper(_ => { }, typeof(Program).Assembly);
 
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
@@ -79,6 +79,8 @@ namespace Movie
             builder.Services.AddScoped<IMovieService, MovieService>();
             builder.Services.AddScoped<IAuthService, AuthService>();
             builder.Services.AddScoped<ICommentService, CommentsService>();
+            
+            builder.Services.AddAutoMapper(typeof(Program).Assembly);
 
 
             var app = builder.Build();

@@ -4,10 +4,10 @@ namespace Movie.Repositories.Interfaces
 {
     public interface ICommentsRepository
     {
-        Task CreateCommentAsync(Comments comment);
-        Task UpdateCommentAsync(Comments comment);
-        Task DeleteCommentAsync(Comments comment);
-        Task<Comments?> GetCommentByIdAsync(long id);
-        Task<List<Comments>> GetCommentsByMovieIdAsync(long movieId);
+        Task CreateCommentAsync(Comment comment);
+        Task UpdateCommentAsync(Comment comment);
+        Task DeleteCommentAsync(Comment comment);
+        Task<Comment?> GetCommentByIdAsync(long id);
+        Task<List<Comment>> GetCommentsByMovieIdAsync(long movieId);
     }
 }

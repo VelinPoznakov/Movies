@@ -116,7 +116,7 @@ namespace Movie.Services
 
         private ClaimsPrincipal? GetTokenPrincipal(string token)
         {
-            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:SigningKey"]!));
+            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["JWT:SigningKey"]!));
 
             var validate = new TokenValidationParameters
             {
@@ -140,14 +140,14 @@ namespace Movie.Services
               new Claim(ClaimTypes.Role, "User"),
             };
 
-            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:SigningKey"]!));
+            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["JWT:SigningKey"]!));
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha512Signature);
 
             var securityToken = new JwtSecurityToken(
                 claims:claims,
                 expires: DateTime.UtcNow.AddSeconds(60),
-                issuer: _config["Jwt:Issuer"],
-                audience: _config["Jwt:Audience"],
+                issuer: _config["JWT:Issuer"],
+                audience: _config["JWT:Audience"],
                 signingCredentials: credentials
                 );
 

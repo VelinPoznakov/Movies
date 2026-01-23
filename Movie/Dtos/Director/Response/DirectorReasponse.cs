@@ -12,10 +12,3 @@ namespace Movie.Dtos.Director.Response
     }
 }
 
-public class DirectorResponseProfile : Profile
-{
-    public DirectorResponseProfile()
-    {
-        CreateMap<Director, DirectorReasponse>();
-    }
-}

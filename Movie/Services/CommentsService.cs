@@ -18,10 +18,11 @@ namespace Movie.Services
       _mapper = mapper;
     }
 
-    public async Task<CommentResponseDto> AddCommentAsync(CreateCommentsRequestDto dto, string userId)
+    public async Task<CommentResponseDto> AddCommentAsync(CreateCommentsRequestDto dto, string userId, long movieId)
     {
-        var comment = _mapper.Map<Comments>(dto);
+        var comment = _mapper.Map<Comment>(dto);
 
+        comment.MovieId = movieId;
         comment.UserId = userId;
         comment.CreatedAt = DateTime.UtcNow;
         comment.UpdatedAt = DateTime.UtcNow;

@@ -23,12 +23,3 @@ namespace Movie.Dtos.Movies.Response
         public List<CommentResponseDto>? Comments { get; set; }
     }
 }
-
-public class MovieResponseProfile : Profile
-{
-    public MovieResponseProfile()
-    {
-        CreateMap<MovieEntity, MovieResponseDto>();
-    }
-}
-

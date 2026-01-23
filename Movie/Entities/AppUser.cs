@@ -11,7 +11,7 @@ namespace Movie.Entities
         public DateTime LastUpdatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? LastLogInAt { get; set; }
         public List<MovieEntity> Movies { get; set; } = new List<MovieEntity>();
-        public List<Comments> Comments { get; set; } = new List<Comments>();
+        public List<Comment> Comments { get; set; } = new();
                  
     }
 }

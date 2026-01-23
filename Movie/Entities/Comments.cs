@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Movie.Entities
 {
-    public class Comments
+    public class Comment
     {
         [Key]
         public long Id { get; set; }

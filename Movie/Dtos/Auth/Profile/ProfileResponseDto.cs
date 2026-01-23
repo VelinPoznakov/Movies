@@ -12,10 +12,3 @@ namespace Movie.Dtos.Auth
         public DateTime CreatedAt { get; set; }
     }
 }
-public class ProfileResponseDtoProfile: Profile
-{
-  public ProfileResponseDtoProfile()
-  {
-    CreateMap<AppUser, ProfileResponseDto>();
-  }
-}
