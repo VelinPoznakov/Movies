@@ -1,0 +1,14 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+
+namespace Movie.Dtos.Auth
+{
+    public class TokenDto
+    {
+        public bool IsLoggedIn { get; set; } = false;
+        public string Token { get; set; } = string.Empty;
+        public string RefreshToken { get; internal set; } = string.Empty;
+    }
+}
