@@ -49,11 +49,7 @@ namespace Movie.Services
             user.LastLogInAt = DateTime.UtcNow;
             await _userManager.UpdateAsync(user);
 
-<<<<<<< Updated upstream
-            return new TokenDto{ Token = token, RefreshToken = refreshToken, IsLoggedIn = true };
-=======
             return new AuthTokens{AccessToken = token, RefreshToken = refreshToken, RefreshTokenExpiryTime = refreshExpiresDate};
->>>>>>> Stashed changes
         }
 
         public async Task<AuthTokens> LoginUser(LoginUserDto request)
@@ -77,9 +73,6 @@ namespace Movie.Services
             user.LastLogInAt = DateTime.UtcNow;
             await _userManager.UpdateAsync(user);
 
-<<<<<<< Updated upstream
-            return new TokenDto{ Token = token, RefreshToken = refreshToken, IsLoggedIn = true };
-=======
             return new AuthTokens{AccessToken = token, RefreshToken = refreshToken, RefreshTokenExpiryTime = refreshExpiresDate};
         }
 
@@ -93,7 +86,6 @@ namespace Movie.Services
             user.RefreshToken = null;
             user.RefreshTokenExpiryTime = DateTime.UtcNow;
             await _userManager.UpdateAsync(user);
->>>>>>> Stashed changes
         }
 
         public async Task<ProfileResponseDto> GetProfileAsync(string username)
@@ -107,18 +99,9 @@ namespace Movie.Services
 
         public async Task<AuthTokens> RefreshToken(string refreshToken)
         {
-<<<<<<< Updated upstream
-            var principal = GetTokenPrincipal(request.Token);
-            
-            if(principal?.Identity?.Name is null) throw new InvalidOperationException("Invalid token.");
-
-            var user = await _userManager.FindByNameAsync(principal.Identity.Name);
-
             if(user == null || user.RefreshToken != request.RefreshToken || user.RefreshTokenExpiryTime <= DateTime.UtcNow)
-=======
             var user = await _userManager.Users.SingleOrDefaultAsync(u => u.RefreshToken == refreshToken);
             if (user == null)
->>>>>>> Stashed changes
                 throw new InvalidOperationException("Invalid refresh token.");
 
             if (user.RefreshTokenExpiryTime <= DateTime.UtcNow)
@@ -133,8 +116,6 @@ namespace Movie.Services
             user.LastLogInAt = DateTime.UtcNow;
             await _userManager.UpdateAsync(user);
 
-<<<<<<< Updated upstream
-            return new TokenDto{ Token = token, RefreshToken = refreshToken, IsLoggedIn = true };
         }
 
         public async Task LogoutUserAsync(string username)
@@ -157,16 +138,16 @@ namespace Movie.Services
                 ValidIssuer = _config["JWT:Issuer"],
                 ValidateAudience = true,
                 ValidAudience = _config["JWT:Audience"],
+                ValidateLifetime = false,
                 ValidateIssuerSigningKey = true,
                 IssuerSigningKey = securityKey
-=======
+
             return new AuthTokens
             {
                 IsLoggedIn = true,
                 AccessToken = newAccessToken,
                 RefreshToken = newRefreshToken,
                 RefreshTokenExpiryTime = newRefreshExpires
->>>>>>> Stashed changes
             };
         }
 

@@ -9,6 +9,5 @@ namespace Movie.Dtos.Auth
     {
         public bool IsLoggedIn { get; set; } = false;
         public string Token { get; set; } = string.Empty;
-        public string RefreshToken { get; internal set; } = string.Empty;
     }
 }

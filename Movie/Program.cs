@@ -82,6 +82,17 @@ namespace Movie
             
             builder.Services.AddAutoMapper(typeof(Program).Assembly);
 
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowReactApp", policy =>
+                {
+                    policy.WithOrigins("http://localhost:5173")
+                        .AllowAnyHeader()
+                        .AllowAnyMethod()
+                        .AllowCredentials();
+                });
+            });
+
 
             var app = builder.Build();
 
