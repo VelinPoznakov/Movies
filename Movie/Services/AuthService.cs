@@ -47,7 +47,7 @@ namespace Movie.Services
             user.LastLogInAt = DateTime.UtcNow;
             await _userManager.UpdateAsync(user);
 
-            return new TokenDto{ Token = token, RefreshToken = refreshToken, IsLoggedIn = true };
+            return new TokenDto{ Token = token, IsLoggedIn = true };
         }
 
         public async Task<TokenDto> LoginUser(LoginUserDto request)
@@ -70,7 +70,7 @@ namespace Movie.Services
             user.LastLogInAt = DateTime.UtcNow;
             await _userManager.UpdateAsync(user);
 
-            return new TokenDto{ Token = token, RefreshToken = refreshToken, IsLoggedIn = true };
+            return new TokenDto{ Token = token, IsLoggedIn = true };
         }
 
         public async Task<ProfileResponseDto> GetProfileAsync(string username)
@@ -89,8 +89,9 @@ namespace Movie.Services
             if(principal?.Identity?.Name is null) throw new InvalidOperationException("Invalid token.");
 
             var user = await _userManager.FindByNameAsync(principal.Identity.Name);
+            if(user == null) throw new InvalidOperationException("User not found.");
 
-            if(user == null || user.RefreshToken != request.RefreshToken || user.RefreshTokenExpiryTime <= DateTime.UtcNow)
+            if(user.RefreshTokenExpiryTime <= DateTime.UtcNow)
                 throw new InvalidOperationException("Invalid refresh token.");
 
             var token = GenerateTockenString(user.UserName!, user.Id);
@@ -101,7 +102,7 @@ namespace Movie.Services
             user.LastLogInAt = DateTime.UtcNow;
             await _userManager.UpdateAsync(user);
 
-            return new TokenDto{ Token = token, RefreshToken = refreshToken, IsLoggedIn = true };
+            return new TokenDto{ Token = token, IsLoggedIn = true };
         }
 
         public async Task LogoutUserAsync(string username)
@@ -124,6 +125,7 @@ namespace Movie.Services
                 ValidIssuer = _config["JWT:Issuer"],
                 ValidateAudience = true,
                 ValidAudience = _config["JWT:Audience"],
+                ValidateLifetime = false,
                 ValidateIssuerSigningKey = true,
                 IssuerSigningKey = securityKey
             };
