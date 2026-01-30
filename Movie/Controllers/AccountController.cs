@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -19,40 +20,96 @@ namespace Movie.Controllers
             _authService = authService;
         }
 
+        private void SetRefreshTokenCookie(string token, DateTime expires)
+        {
+            Response.Cookies.Append(
+                "refreshToken",
+                token,
+                new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = Request.IsHttps,
+                    SameSite = SameSiteMode.Strict,
+                    Expires = expires,
+                    Path = "/api/account/refresh-token"
+                }
+                
+            );
+        }
+
+        private void DeleteRefreshTokenCookie()
+        {
+            Response.Cookies.Delete("refreshToken", new CookieOptions
+            {
+                Path = "/api/account/refresh-token"
+            });
+        }
+
         [HttpPost("login")]
         public async Task<IActionResult> Login(LoginUserDto request)
         {
-            var res = await _authService.LoginUser(request);
-            if(res.IsLoggedIn) return Ok(res);
+            var tokens = await _authService.LoginUser(request);
+            if (tokens == null) return Unauthorized("Invalid credentials");
 
-            return Unauthorized();
+            SetRefreshTokenCookie(tokens.RefreshToken, tokens.RefreshTokenExpiryTime);
+
+            return Ok(
+                new TokenDto
+                {
+                    IsLoggedIn = true,
+                    Token = tokens.AccessToken
+                }
+            );
         }
 
         [HttpPost("register")]
         public async Task<IActionResult> Register(RegisterDto request)
         {
-            var res = await _authService.RegisterUser(request);
-            if (res == null) return BadRequest("failed");
-            return Ok(res);
+            var tokens = await _authService.RegisterUser(request);
+            if(tokens == null) return Unauthorized();
+
+            SetRefreshTokenCookie(tokens.RefreshToken, tokens.RefreshTokenExpiryTime);
+
+            return Ok(
+                new TokenDto
+                {
+                    IsLoggedIn = true,
+                    Token = tokens.AccessToken
+                }
+            );
         }
 
         [HttpPost("refresh-token")]
         public async Task<IActionResult> RefreshToken(RefreshTokenDto request)
         {
-            var loginResult = await _authService.RefreshToken(request);
-            if(loginResult.IsLoggedIn) return Ok(loginResult);
+            var refreshToken = Request.Cookies["refreshToken"];
+            if (refreshToken == null) return Unauthorized("No refresh token provided");
 
-            return Unauthorized();
+            var tokens = await _authService.RefreshToken(request.Token);
+            if (tokens == null) return Unauthorized("Invalid refresh token");
+
+            SetRefreshTokenCookie(tokens.RefreshToken, tokens.RefreshTokenExpiryTime);
+
+            return Ok(
+                new TokenDto
+                {
+                    IsLoggedIn = true,
+                    Token = tokens.AccessToken
+                }
+            );
         }
 
         [Authorize]
         [HttpPost("logout")]
         public async Task<IActionResult> Logout()
         {
-            var username = User.Identity?.Name;
+            var username = User?.Identity?.Name;
             if(username == null) return Unauthorized();
 
             await _authService.LogoutUserAsync(username);
+
+            DeleteRefreshTokenCookie();
+
             return Ok(new { Message = "Logged out successfully" });
         }
 
@@ -60,7 +117,7 @@ namespace Movie.Controllers
         [Authorize]
         public async Task<IActionResult> GetProfile()
         {
-            var username = User.Identity?.Name;
+            var username = User?.Identity?.Name;
             if (username == null) return Unauthorized();
 
             var result = await _authService.GetProfileAsync(username);

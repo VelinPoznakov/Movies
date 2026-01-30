@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Movie.Dtos.Auth;
 using Movie.Entities;
@@ -27,7 +28,7 @@ namespace Movie.Services
             _mapper = mapper;
         }
 
-        public async Task<TokenDto> RegisterUser(RegisterDto request)
+        public async Task<AuthTokens> RegisterUser(RegisterDto request)
         {
             var user = new AppUser
             {
@@ -41,16 +42,17 @@ namespace Movie.Services
                 
             var token = GenerateTockenString(user.UserName!, user.Id);
             var refreshToken = GenerateRefreshToken();
+            var refreshExpiresDate = DateTime.UtcNow.AddHours(12);
 
             user.RefreshToken = refreshToken;
-            user.RefreshTokenExpiryTime = DateTime.UtcNow.AddHours(12);
+            user.RefreshTokenExpiryTime = refreshExpiresDate;
             user.LastLogInAt = DateTime.UtcNow;
             await _userManager.UpdateAsync(user);
 
-            return new TokenDto{ Token = token, IsLoggedIn = true };
+            return new AuthTokens{AccessToken = token, RefreshToken = refreshToken, RefreshTokenExpiryTime = refreshExpiresDate};
         }
 
-        public async Task<TokenDto> LoginUser(LoginUserDto request)
+        public async Task<AuthTokens> LoginUser(LoginUserDto request)
         {
             var user = await _userManager.FindByNameAsync(request.Username);
             
@@ -64,13 +66,26 @@ namespace Movie.Services
 
             var token = GenerateTockenString(user.UserName!, user.Id);
             var refreshToken = GenerateRefreshToken();
+            var refreshExpiresDate = DateTime.UtcNow.AddHours(12);
 
             user.RefreshToken = refreshToken;
-            user.RefreshTokenExpiryTime = DateTime.UtcNow.AddHours(12);
+            user.RefreshTokenExpiryTime = refreshExpiresDate;
             user.LastLogInAt = DateTime.UtcNow;
             await _userManager.UpdateAsync(user);
 
-            return new TokenDto{ Token = token, IsLoggedIn = true };
+            return new AuthTokens{AccessToken = token, RefreshToken = refreshToken, RefreshTokenExpiryTime = refreshExpiresDate};
+        }
+
+        public async Task LogoutUserAsync(string username)
+        {
+            var user = await _userManager.FindByNameAsync(username);
+
+            if(user == null) 
+                throw new InvalidOperationException("User not found.");
+
+            user.RefreshToken = null;
+            user.RefreshTokenExpiryTime = DateTime.UtcNow;
+            await _userManager.UpdateAsync(user);
         }
 
         public async Task<ProfileResponseDto> GetProfileAsync(string username)
@@ -82,27 +97,25 @@ namespace Movie.Services
 
         }
 
-        public async Task<TokenDto> RefreshToken(RefreshTokenDto request)
+        public async Task<AuthTokens> RefreshToken(string refreshToken)
         {
-            var principal = GetTokenPrincipal(request.Token);
-            
-            if(principal?.Identity?.Name is null) throw new InvalidOperationException("Invalid token.");
-
-            var user = await _userManager.FindByNameAsync(principal.Identity.Name);
-            if(user == null) throw new InvalidOperationException("User not found.");
-
-            if(user.RefreshTokenExpiryTime <= DateTime.UtcNow)
+            if(user == null || user.RefreshToken != request.RefreshToken || user.RefreshTokenExpiryTime <= DateTime.UtcNow)
+            var user = await _userManager.Users.SingleOrDefaultAsync(u => u.RefreshToken == refreshToken);
+            if (user == null)
                 throw new InvalidOperationException("Invalid refresh token.");
 
-            var token = GenerateTockenString(user.UserName!, user.Id);
-            var refreshToken = GenerateRefreshToken();
+            if (user.RefreshTokenExpiryTime <= DateTime.UtcNow)
+                throw new InvalidOperationException("Refresh token expired.");
 
-            user.RefreshToken = refreshToken;
-            user.RefreshTokenExpiryTime = DateTime.UtcNow.AddHours(12);
+            var newAccessToken = GenerateTockenString(user.UserName!, user.Id);
+            var newRefreshToken = GenerateRefreshToken();
+            var newRefreshExpires = DateTime.UtcNow.AddHours(12);
+
+            user.RefreshToken = newRefreshToken;
+            user.RefreshTokenExpiryTime = newRefreshExpires;
             user.LastLogInAt = DateTime.UtcNow;
             await _userManager.UpdateAsync(user);
 
-            return new TokenDto{ Token = token, IsLoggedIn = true };
         }
 
         public async Task LogoutUserAsync(string username)
@@ -128,9 +141,14 @@ namespace Movie.Services
                 ValidateLifetime = false,
                 ValidateIssuerSigningKey = true,
                 IssuerSigningKey = securityKey
-            };
 
-            return new JwtSecurityTokenHandler().ValidateToken(token, validate, out _);
+            return new AuthTokens
+            {
+                IsLoggedIn = true,
+                AccessToken = newAccessToken,
+                RefreshToken = newRefreshToken,
+                RefreshTokenExpiryTime = newRefreshExpires
+            };
         }
 
         private string GenerateTockenString(string username, string userId)

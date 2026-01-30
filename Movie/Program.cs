@@ -102,6 +102,8 @@ namespace Movie
                 app.UseSwaggerUI();
             }
 
+            app.UseCors("AllowReactApp");
+
             app.UseHttpsRedirection();
 
             app.UseAuthentication();
