@@ -1,14 +1,17 @@
-import { createContext, type ReactNode} from "react";
 import { useGetUser } from "../Queries/Auth/authHook";
+import { UserContext } from "./useUser";
 
-export const AuthContext = createContext<any>(null);
 
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const { data: user, isLoading } = useGetUser();
+
+export function UserProvider({children}: {children: React.ReactNode}){
+  const {data, isLoading} = useGetUser();
 
   return (
-    <AuthContext.Provider value={{ user, isLoading }}>
+    <UserContext.Provider value={{user: data ?? null, isLoading}}>
       {children}
-    </AuthContext.Provider>
-  );
-};
+    </UserContext.Provider>
+  )
+}
+
+
+

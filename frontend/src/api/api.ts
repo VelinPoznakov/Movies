@@ -1,49 +1,66 @@
 import axios from "axios";
+import { getAccessToken, setAccessToken } from "../accessToken";
 import type { TokenResponse } from "../types/auth";
 
 export const api = axios.create({
-  baseURL: "http://localhost:5173/api",
+  baseURL: "http://localhost:5233/api",
   withCredentials: true,
 });
 
 
+export const refreshTokenApi = axios.create({
+  baseURL: "http://localhost:5233/api",
+  withCredentials: true,
+})
+
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("token");
-  if (token) {
+  const token = getAccessToken();
+
+  if(token){
     config.headers.Authorization = `Bearer ${token}`;
   }
+
   return config;
 });
 
+let refreshPromise: Promise<string> | null = null;
+
+async function refreshAccessToken(): Promise<string>{
+  const res = await refreshTokenApi.post<TokenResponse>("/account/refresh-token");
+  setAccessToken(res.data.token);
+  return res.data.token;
+}
 
 api.interceptors.response.use(
-  (res) => res,
+  (response) => response,
+
   async (error) => {
     const originalRequest = error.config;
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
+    if(!originalRequest) return Promise.reject(error);
+    if(originalRequest.response.status !== 401) return Promise.reject(error);
 
-      try {
-        const refreshResponse = await api.post<TokenResponse>(
-          "/account/refresh-token",
-          {
-            token: localStorage.getItem("token"),
-          }
-        );
+    if(originalRequest._retry) return Promise.reject(error);
+    originalRequest._retry = true;
 
-        localStorage.setItem("token", refreshResponse.data.token);
-
-        originalRequest.headers.Authorization =
-          `Bearer ${refreshResponse.data.token}`;
-
-        return api(originalRequest);
-      } catch {
-        localStorage.clear();
-        window.location.href = "/login";
-      }
+    if((originalRequest.url ?? "").includes("/account/refresh-token")){
+      return Promise.reject(error);
     }
 
-    return Promise.reject(error);
+    try{
+      refreshPromise ??= refreshAccessToken();
+      const newToken = await refreshPromise;
+      refreshPromise = null;
+
+      originalRequest.headers.Authorization = `Bearer ${newToken}`;
+      return api(originalRequest);
+    }catch(err){
+      refreshPromise = null;
+      setAccessToken(null);
+      window.location.href = "/login";
+      return Promise.reject(err);
+    }
+
+
   }
-);
+)

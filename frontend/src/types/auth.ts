@@ -15,11 +15,6 @@ export interface TokenResponse {
   token: string;
 }
 
-export interface RefreshTokenRequest {
-  token: string;
-  refreshToken: string;
-}
-
 export interface UserProfile {
   username: string;
   email: string;

@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getUserProfile, loginUser, logoutUser, registerUser } from "../../api/fetching/authService";
+import { setAccessToken } from "../../accessToken";
 
 export function useGetUser(){
   return useQuery({
@@ -16,8 +17,8 @@ export function useLogin(){
   return useMutation({
     mutationFn: loginUser,
     onSuccess: (data) => {
+      setAccessToken(data.token);
       qc.invalidateQueries({ queryKey: ["user"] });
-      localStorage.setItem("token", data.token);
     }
   });
 }
@@ -28,8 +29,8 @@ export function useRegister(){
   return useMutation({
     mutationFn: registerUser,
     onSuccess: (data) => {
+      setAccessToken(data.token);
       qc.invalidateQueries({ queryKey: ["user"] });
-      localStorage.setItem("token", data.token);
     }
   });
 }
@@ -40,8 +41,8 @@ export function useLogout(){
   return useMutation({
     mutationFn: logoutUser,
     onSuccess: () => {
+      setAccessToken(null);
       qc.clear();
-      localStorage.clear();
     }
   });
 }
