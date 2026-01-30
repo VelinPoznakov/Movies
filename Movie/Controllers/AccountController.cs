@@ -80,12 +80,12 @@ namespace Movie.Controllers
         }
 
         [HttpPost("refresh-token")]
-        public async Task<IActionResult> RefreshToken(RefreshTokenDto request)
+        public async Task<IActionResult> RefreshToken()
         {
             var refreshToken = Request.Cookies["refreshToken"];
             if (refreshToken == null) return Unauthorized("No refresh token provided");
 
-            var tokens = await _authService.RefreshToken(request.Token);
+            var tokens = await _authService.RefreshToken(refreshToken);
             if (tokens == null) return Unauthorized("Invalid refresh token");
 
             SetRefreshTokenCookie(tokens.RefreshToken, tokens.RefreshTokenExpiryTime);
