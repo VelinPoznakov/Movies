@@ -9,7 +9,6 @@ namespace Movie.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize]
     public class CommentController: ControllerBase
     {
         private readonly ICommentService _commentService;
@@ -23,6 +22,7 @@ namespace Movie.Controllers
         public async Task<ActionResult<List<CommentResponseDto>>> GetComments([FromRoute] long movieId)
             => Ok(await _commentService.GetCommentsByMovieId(movieId));
 
+        [Authorize]
         [HttpPost("{movieId:long}")]
         public async Task<IActionResult> AddCommentAsync(long movieId, [FromBody] CreateCommentsRequestDto dto)
         {
@@ -34,6 +34,7 @@ namespace Movie.Controllers
             return result == null ? NotFound() : Ok(result);
         }
 
+        [Authorize]
         [HttpPut("{commentId:long}")]
         public async Task<IActionResult> UpdateCommentAsync(long commentId, [FromBody] UpdateCommentRequestDto dto)
         {
@@ -42,6 +43,7 @@ namespace Movie.Controllers
             return result == null ? NotFound() : Ok(result);
         }
 
+        [Authorize]
         [HttpDelete("{commentId:long}")]
         public async Task<IActionResult> DeleteCommentAsync(long commentId)
         {
