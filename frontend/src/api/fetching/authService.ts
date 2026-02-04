@@ -1,6 +1,5 @@
 import type { LoginRequest, RegisterRequest, TokenResponse, UserProfile } from "../../types/auth";
 import { api } from "../api";
-import type { AxiosError } from "axios";
 
 export async function registerUser(data: RegisterRequest){
   const res = await api.post<TokenResponse>("/account/register", data);
@@ -16,12 +15,13 @@ export async function logoutUser(){
   await api.post("/account/logout");
 }
 
-export async function getUserProfile(): Promise<UserProfile | null> {
-  try{
-    const res = await api.get<UserProfile>("/account/profile");
+export async function getUserProfile(){
+  const res = await api.get<UserProfile>("/account/profile");
+  return res.data;
+}
+
+
+export async function getSession(): Promise<UserProfile | null> {
+    const res = await api.get<UserProfile | null>("/account/session");
     return res.data;
-  }catch(err){
-    if((err as AxiosError)?.response?.status === 401) return null;
-    throw err;
-  }
 }

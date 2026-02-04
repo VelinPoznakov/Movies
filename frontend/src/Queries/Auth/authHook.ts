@@ -1,11 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { getUserProfile, loginUser, logoutUser, registerUser } from "../../api/fetching/authService";
+import { getSession, getUserProfile, loginUser, logoutUser, registerUser } from "../../api/fetching/authService";
 import { setAccessToken } from "../../accessToken";
 
 export function useGetUser(){
   return useQuery({
     queryKey: ["user"],
-    queryFn: getUserProfile,
+    queryFn: getSession,
     staleTime: 5 * 60 * 1000,
     retry: false,
   });
@@ -45,4 +45,14 @@ export function useLogout(){
       qc.clear();
     }
   });
+}
+
+export function useProfile(){
+
+  return useQuery({
+    queryFn: getUserProfile,
+    queryKey: ["profile"],
+    staleTime: 5 * 60 * 1000,
+    retry: false,
+  })
 }

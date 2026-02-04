@@ -1,10 +1,6 @@
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Movie.Dtos.Auth;
-using Movie.Entities;
 using Movie.Services.Interfaces;
 
 namespace Movie.Controllers
@@ -125,10 +121,20 @@ namespace Movie.Controllers
             return result == null ? NotFound() : Ok(result);
         }
 
+        [AllowAnonymous]
+        [HttpGet("session")]
+        public async Task<IActionResult> GetSession()
+        {
+            if (User?.Identity?.IsAuthenticated != true)
+                return Ok(null);
 
-        
+            var username = User.Identity?.Name;
+            if (string.IsNullOrWhiteSpace(username))
+                return Ok(null);
 
-
+            var user = await _authService.GetProfileAsync(username);
+            return Ok(user);
+        }
         
     }
 }

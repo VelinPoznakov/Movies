@@ -52,12 +52,13 @@ api.interceptors.response.use(
       const newToken = await refreshPromise;
       refreshPromise = null;
 
+      originalRequest.headers = originalRequest.headers ?? {};
       originalRequest.headers.Authorization = `Bearer ${newToken}`;
       return api(originalRequest);
+      
     }catch(err){
       refreshPromise = null;
       setAccessToken(null);
-      window.location.href = "/login";
       return Promise.reject(err);
     }
 

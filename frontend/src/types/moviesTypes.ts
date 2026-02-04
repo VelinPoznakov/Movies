@@ -14,6 +14,7 @@ export interface CreateMovieRequest {
 export interface UpdateMovieRequest {
   title: string;
   timeLong: string;
+  rating: number;
   directorName: string;
   genreName: string;
   releaseDate: string;

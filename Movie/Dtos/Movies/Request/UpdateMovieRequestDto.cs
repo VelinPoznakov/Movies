@@ -12,6 +12,7 @@ namespace Movie.Dtos.Movies.Request
     {
         public string Title { get; set; } = string.Empty;
         public string TimeLong { get; set; } = string.Empty;
+        public double Rating { get; set; }
 
         public string DirectorName { get; set; } = string.Empty;
         public string GenreName { get; set; } = string.Empty;
