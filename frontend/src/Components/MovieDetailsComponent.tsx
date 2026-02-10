@@ -1,4 +1,4 @@
-import { message, Modal, Rate, Space, Typography } from "antd";
+import { Button, Flex, message, Modal, Rate, Space, Typography } from "antd";
 import type { MovieResponse } from "../types/moviesTypes";
 import { useState } from "react";
 import { useUpdateMovie } from "../Queries/Movies/movies";
@@ -55,22 +55,39 @@ function MovieDetailsComponent({ open, movie, onClose }: MovieModalProps) {
         <Title level={2}>{movie?.title}</Title>
         <Text>description</Text>
 
-        <div style={{ textAlign: "left", marginTop: 12 }}>
-          <Space>
+        <div style={{ marginTop: 12 }}>
+          <Space direction="vertical" style={{ width: "100%" }}>
+            <Flex justify="space-between" align="center">
+              <Text strong>Director:</Text>
+              <Text>{movie?.director.name}</Text>
+            </Flex>
+
             <div>
-              <Text strong>Director:</Text> {movie?.director.name}
+              <Flex justify="space-between" align="center">
+                <Text strong>Rating: </Text>
+                <Rate
+                  value={stars}
+                  onChange={(value) => {
+                    if (!canRate) {
+                      message.error("You must be logged in to rate a movie");
+                      return navigate("/login");
+                    }
+                    handleRatingChange(value);
+                  }}
+                  disabled={isPending}
+                />
+              </Flex>
             </div>
-            <Text strong>Rating: </Text>
-            <Rate value={stars} onChange={(value) => {
-              if(!canRate) {
-                message.error("You must be logged in to rate a movie");
-                return navigate("/login");
-              }
-              
-              handleRatingChange(value)
-              }} disabled={isPending} /> 
           </Space>
         </div>
+
+        {user?.username && user?.username === movie?.user?.username ? (
+          <div>
+            <Button type="primary">Edit</Button>
+            <Button type="primary" danger>Delete</Button>
+          </div>
+        ) : null}
+
       </div>
 
     </Modal>
