@@ -29,6 +29,7 @@ namespace Movie.Repositories
     public async Task<Comment?> GetCommentByIdAsync(long id)
     {
         return await _context.Comments
+            .Include(c => c.User)
             .Include(c => c.Movie)
                 .ThenInclude(m => m!.Director)
             .Include(c => c.Movie)
@@ -40,6 +41,7 @@ namespace Movie.Repositories
     public async Task<List<Comment>> GetCommentsByMovieIdAsync(long movieId)
     {
         return await _context.Comments
+            .Include(c => c.User)
             .Include(c => c.Movie)
                 .ThenInclude(m => m!.Director)
             .Include(c => c.Movie)

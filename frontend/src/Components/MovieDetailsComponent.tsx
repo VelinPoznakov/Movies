@@ -1,9 +1,11 @@
-import { Button, Flex, message, Modal, Rate, Space, Typography } from "antd";
+import { Button, Flex, Image, message, Modal, Rate, Space, Typography } from "antd";
 import type { MovieResponse } from "../types/moviesTypes";
 import { useState } from "react";
 import { useUpdateMovie } from "../Queries/Movies/movies";
 import { useUser } from "../Contexts/useUser";
 import { useNavigate } from "react-router";
+import CommentsListComponent from "./CommentsListComponent";
+import posterFallback from "../assets/image.png";
 
 const { Title, Text } = Typography;
 
@@ -14,7 +16,6 @@ type MovieModalProps = {
 }
 
 function MovieDetailsComponent({ open, movie, onClose }: MovieModalProps) {
-
   const {user} = useUser();
   const navigate = useNavigate();
   const [stars, setStars] = useState(movie?.rating ?? 0);
@@ -49,18 +50,67 @@ function MovieDetailsComponent({ open, movie, onClose }: MovieModalProps) {
       onCancel={onClose}
       footer={null}
       destroyOnHidden
+      centered
+      styles={{
+        body: {
+          maxHeight: "80vh",
+          overflowY: "auto",
+        }
+      }}
     >
       <div style={{ textAlign: "center" }}>
-        <h1>IMAGE</h1>
+        <Image
+          src={posterFallback}
+          alt={movie?.title ?? "Movie poster"}
+          width="100%"
+          height={240}
+          style={{
+            objectFit: "cover",
+            borderRadius: 12,
+            boxShadow: "0 12px 32px rgba(0,0,0,0.18)",
+            marginTop: 20,
+          }}
+          preview={false}
+          placeholder
+        />
+
         <Title level={2}>{movie?.title}</Title>
         <Text>description</Text>
 
         <div style={{ marginTop: 12 }}>
-          <Space direction="vertical" style={{ width: "100%" }}>
-            <Flex justify="space-between" align="center">
-              <Text strong>Director:</Text>
-              <Text>{movie?.director.name}</Text>
-            </Flex>
+          <Space orientation="vertical" style={{ width: "100%" }}>
+
+            <div>
+              <Flex justify="space-between" align="center">
+                <Text strong>Duration:</Text>
+                <Text>{movie?.timeLong}</Text>
+              </Flex>
+            </div>
+
+            <div>
+              <Flex justify="space-between" align="center">
+                <Text strong>Director:</Text>
+                <Text>{movie?.director.name}</Text>
+              </Flex>
+            </div>
+
+            <div>
+              <Flex justify="space-between" align="center">
+                <Text strong>Genre:</Text>
+                <Text>{movie?.genre.name}</Text>
+              </Flex>
+            </div>
+
+            <div>
+              <Flex justify="space-between" align="center">
+                <Text strong>Release Date:</Text>
+                <Text>{movie?.releaseDate ? new Date(movie?.releaseDate).toLocaleDateString("bg-BG", {
+                  year: "numeric",
+                  month: "2-digit",
+                  day: "2-digit"
+                }) : "-"}</Text>
+              </Flex>
+            </div>
 
             <div>
               <Flex justify="space-between" align="center">
@@ -79,6 +129,10 @@ function MovieDetailsComponent({ open, movie, onClose }: MovieModalProps) {
               </Flex>
             </div>
           </Space>
+        </div>
+
+        <div>
+          {movie && <CommentsListComponent movieId={movie.id} />}
         </div>
 
         {user?.username && user?.username === movie?.user?.username ? (
