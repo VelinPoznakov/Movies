@@ -16,7 +16,7 @@ function CommentsListComponent({ movieId }: Props) {
 
   return (
     <List
-      style={{ maxHeight: 320, overflowY: "auto", width: "100%", paddingInline: 0 }}
+      style={{ width: "100%" }}
       dataSource={comments ?? []}
       itemLayout="vertical"
       split={false}
@@ -26,6 +26,7 @@ function CommentsListComponent({ movieId }: Props) {
           <CommentComponent comment={comment} />
         </List.Item>
       )}
+      footer={<div style={{ height: 24 }} />} 
     />
   );
   

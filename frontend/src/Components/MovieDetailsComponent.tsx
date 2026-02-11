@@ -54,7 +54,7 @@ function MovieDetailsComponent({ open, movie, onClose }: MovieModalProps) {
       styles={{
         body: {
           maxHeight: "80vh",
-          overflowY: "auto",
+          overflow: "hidden",
         }
       }}
     >
@@ -64,18 +64,14 @@ function MovieDetailsComponent({ open, movie, onClose }: MovieModalProps) {
           alt={movie?.title ?? "Movie poster"}
           width="100%"
           height={240}
-          style={{
-            objectFit: "cover",
-            borderRadius: 12,
-            boxShadow: "0 12px 32px rgba(0,0,0,0.18)",
-            marginTop: 20,
-          }}
+          style={{ objectFit: "cover", borderRadius: 12, marginTop: 20 }}
           preview={false}
-          placeholder
         />
 
-        <Title level={2}>{movie?.title}</Title>
-        <Text>description</Text>
+        <Title level={2} style={{ marginTop: 22 }}>
+          {movie?.title}
+        </Title>
+        <Text type="secondary">description</Text>
 
         <div style={{ marginTop: 12 }}>
           <Space orientation="vertical" style={{ width: "100%" }}>
@@ -131,7 +127,7 @@ function MovieDetailsComponent({ open, movie, onClose }: MovieModalProps) {
           </Space>
         </div>
 
-        <div>
+        <div style={{ maxHeight: 320, overflowY: "auto", paddingBottom: 16 }}>
           {movie && <CommentsListComponent movieId={movie.id} />}
         </div>
 

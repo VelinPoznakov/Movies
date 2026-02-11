@@ -23,7 +23,7 @@ function CommentComponent({ comment }: { comment: CommentResponse }) {
           {createdDate}
         </Text>
         <Text strong style={{ fontSize: 12 }}>
-          {comment.user?.username ?? "Unknown"}
+          {comment.username ?? "Unknown"}
         </Text>
       </Flex>
 
