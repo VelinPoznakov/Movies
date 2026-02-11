@@ -1,6 +1,7 @@
 import { LockOutlined, UserOutlined } from "@ant-design/icons";
 import { Button, Form, Input, message } from "antd";
 import { useLogin } from "../Queries/Auth/authHook";
+import { Link } from "react-router";
 
 
 type Values = {
@@ -56,6 +57,12 @@ function Login(){
           hasFeedback
         >
           <Input.Password placeholder="password" prefix={<LockOutlined />} />
+        </Form.Item>
+
+        <Form.Item>
+          <Link to="/register">
+            Don't have an account? Register here.
+          </Link>
         </Form.Item>
 
         <Button type="primary" htmlType="submit" block loading={isPending}>
