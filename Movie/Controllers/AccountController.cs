@@ -144,14 +144,7 @@ namespace Movie.Controllers
 
             SetRefreshTokenCookie(tokens.RefreshToken, tokens.RefreshTokenExpiryTime);
 
-
-            var principalName = new JwtSecurityTokenHandler()
-                .ReadJwtToken(tokens.AccessToken)
-                .Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value;
-
-            if (string.IsNullOrWhiteSpace(principalName)) return Ok(null);
-
-            var profile = await _authService.GetProfileAsync(principalName);
+            var profile = await _authService.GetProfileAsync(tokens.Username);
 
             return Ok(new SessionDto { IsLoggedIn = true, Token = tokens.AccessToken, User = profile });
         }

@@ -122,7 +122,8 @@ namespace Movie.Services
                         IsLoggedIn = true,
                         AccessToken = newAccessToken,
                         RefreshToken = newRefreshToken,
-                        RefreshTokenExpiryTime = newRefreshExpires
+                        RefreshTokenExpiryTime = newRefreshExpires,
+                        Username = user.UserName!
                     };
             }
 
@@ -138,7 +139,8 @@ namespace Movie.Services
                     IsLoggedIn = true,
                     AccessToken = newAccessToken,
                     RefreshToken = user.RefreshToken!,
-                    RefreshTokenExpiryTime = user.RefreshTokenExpiryTime!.Value
+                    RefreshTokenExpiryTime = user.RefreshTokenExpiryTime!.Value,
+                    Username = user.UserName!
                 };
             }
 

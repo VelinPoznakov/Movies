@@ -12,5 +12,6 @@ namespace Movie.Dtos.Auth
 
         public string RefreshToken { get; set; } = string.Empty;
         public DateTime RefreshTokenExpiryTime { get; set; }
+        public string Username { get; set; } = string.Empty;
     }
 }
