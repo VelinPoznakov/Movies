@@ -31,6 +31,10 @@ function NavbarComponent() {
     <div 
         style={{
           display: "flex",
+          alignItems: "center",
+          width: "100%",
+          overflowX: "auto",
+          overflowY: "hidden",
           }}
       >
       <Menu
@@ -38,7 +42,8 @@ function NavbarComponent() {
         mode="horizontal"
         selectedKeys={[location.pathname]}
         items={leftSideMenu}
-        style={{ flex: 1, borderBottom: "none" }}
+        disabledOverflow
+        style={{ flex: "1 1 auto", minWidth: 0, borderBottom: "none" }}
       />
 
       <Menu
@@ -46,7 +51,8 @@ function NavbarComponent() {
         mode="horizontal"
         selectedKeys={[location.pathname]}
         items={rightSideMenu}
-        style={{ borderBottom: "none" }}
+        disabledOverflow
+        style={{ borderBottom: "none", flexShrink: 0 }}
         onClick={({key}) => {
           if(key === "Logout"){
             logout();
