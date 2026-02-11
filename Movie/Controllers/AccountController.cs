@@ -1,3 +1,5 @@
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Movie.Dtos.Auth;
@@ -27,7 +29,7 @@ namespace Movie.Controllers
                     Secure = Request.IsHttps,
                     SameSite = SameSiteMode.Strict,
                     Expires = expires,
-                    Path = "/api/account/refresh-token"
+                    Path = "/api" // allow session + refresh endpoints to read it
                 }
                 
             );
@@ -37,7 +39,7 @@ namespace Movie.Controllers
         {
             Response.Cookies.Delete("refreshToken", new CookieOptions
             {
-                Path = "/api/account/refresh-token"
+                Path = "/api"
             });
         }
 
@@ -125,16 +127,35 @@ namespace Movie.Controllers
         [HttpGet("session")]
         public async Task<IActionResult> GetSession()
         {
-            if (User?.Identity?.IsAuthenticated != true)
+            if (User?.Identity?.IsAuthenticated == true)
+            {
+                var username = User.Identity?.Name;
+                if (string.IsNullOrWhiteSpace(username)) return Ok(null);
+
+                var user = await _authService.GetProfileAsync(username);
+                return Ok(new SessionDto { IsLoggedIn = true, Token = null, User = user });
+            }
+
+            var refreshToken = Request.Cookies["refreshToken"];
+            if (string.IsNullOrWhiteSpace(refreshToken))
                 return Ok(null);
 
-            var username = User.Identity?.Name;
-            if (string.IsNullOrWhiteSpace(username))
-                return Ok(null);
+            var tokens = await _authService.RefreshToken(refreshToken);
 
-            var user = await _authService.GetProfileAsync(username);
-            return Ok(user);
+            SetRefreshTokenCookie(tokens.RefreshToken, tokens.RefreshTokenExpiryTime);
+
+
+            var principalName = new JwtSecurityTokenHandler()
+                .ReadJwtToken(tokens.AccessToken)
+                .Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value;
+
+            if (string.IsNullOrWhiteSpace(principalName)) return Ok(null);
+
+            var profile = await _authService.GetProfileAsync(principalName);
+
+            return Ok(new SessionDto { IsLoggedIn = true, Token = tokens.AccessToken, User = profile });
         }
+
         
     }
 }

@@ -8,7 +8,8 @@ namespace Movie.Mappers.Comments
     {
         public CommentResponseDtoProfile()
         {
-            CreateMap<Comment, CommentResponseDto>();
+            CreateMap<Comment, CommentResponseDto>()
+                .ForMember(dest => dest.Username, opt => opt.MapFrom(src => src.User != null ? src.User.UserName : null));
         }
     }
 }

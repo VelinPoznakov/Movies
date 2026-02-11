@@ -17,4 +17,13 @@ export interface TokenResponse {
 export interface UserProfile {
   username: string;
   email: string;
+  createdAt: string;
+  roles: string[];
 }
+
+export type SessionDto = {
+  isLoggedIn: boolean;
+  token: string | null;
+  user: UserProfile | null;
+};
+

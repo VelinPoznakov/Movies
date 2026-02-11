@@ -1,5 +1,3 @@
-import type { UserProfile } from "./auth";
-
 export interface CreateCommentsRequest {
   content: string;
 }
@@ -11,7 +9,7 @@ export interface UpdateCommentRequest {
 export interface CommentResponse {
   id: number;
   content: string;
-  user: UserProfile;
+  username: string;
   createdAt: string;
   updatedAt: string;
 }

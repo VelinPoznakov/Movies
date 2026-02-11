@@ -2,6 +2,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -37,7 +38,11 @@ namespace Movie.Services
             if (!result.Succeeded)
                 throw new InvalidOperationException("User registration failed.");
 
-            var accessToken = GenerateTokenString(user.UserName!, user.Id);
+            var role = await _userManager.AddToRoleAsync(user, "User");
+            if(!role.Succeeded)
+                throw new InvalidOperationException("Failed to assign role to user.");
+
+            var accessToken = await GenerateTokenString(user);
             var refreshToken = GenerateRefreshToken();
             var refreshExpires = DateTime.UtcNow.AddHours(12);
 
@@ -65,7 +70,7 @@ namespace Movie.Services
             if (!ok)
                 throw new InvalidOperationException("Invalid password.");
 
-            var accessToken = GenerateTokenString(user.UserName!, user.Id);
+            var accessToken = await GenerateTokenString(user);
             var refreshToken = GenerateRefreshToken();
             var refreshExpires = DateTime.UtcNow.AddHours(12);
 
@@ -85,29 +90,59 @@ namespace Movie.Services
 
         public async Task<AuthTokens> RefreshToken(string refreshToken)
         {
-            var user = await _userManager.Users.SingleOrDefaultAsync(u => u.RefreshToken == refreshToken);
+            var now = DateTime.UtcNow;
+            var refreshLifeTime = TimeSpan.FromHours(12);
+            var freeWindow = TimeSpan.FromSeconds(30);
+
+            var user = await _userManager.Users.SingleOrDefaultAsync(u =>
+                 u.RefreshToken == refreshToken || u.PreviousRefreshToken == refreshToken);
             if (user == null)
                 throw new InvalidOperationException("Invalid refresh token.");
 
-            if (user.RefreshTokenExpiryTime <= DateTime.UtcNow)
-                throw new InvalidOperationException("Refresh token expired.");
-
-            var newAccessToken = GenerateTokenString(user.UserName!, user.Id);
-            var newRefreshToken = GenerateRefreshToken();
-            var newRefreshExpires = DateTime.UtcNow.AddHours(12);
-
-            user.RefreshToken = newRefreshToken;
-            user.RefreshTokenExpiryTime = newRefreshExpires;
-            user.LastLogInAt = DateTime.UtcNow;
-            await _userManager.UpdateAsync(user);
-
-            return new AuthTokens
+            if(user.RefreshToken == refreshToken)
             {
-                IsLoggedIn = true,
-                AccessToken = newAccessToken,
-                RefreshToken = newRefreshToken,
-                RefreshTokenExpiryTime = newRefreshExpires
-            };
+                if(user.RefreshTokenExpiryTime <= now) 
+                    throw new InvalidOperationException("Refresh token expired.");
+
+                var newAccessToken = await GenerateTokenString(user);
+
+                user.PreviousRefreshToken = user.RefreshToken;
+                user.PreviousRefreshTokenExpiryTime = now.Add(freeWindow);
+
+                var newRefreshToken = GenerateRefreshToken();
+                var newRefreshExpires = now.Add(refreshLifeTime);
+
+                user.RefreshToken = newRefreshToken;
+                user.RefreshTokenExpiryTime = newRefreshExpires;
+                user.LastLogInAt = now;
+                await _userManager.UpdateAsync(user);
+
+                return new AuthTokens
+                    {
+                        IsLoggedIn = true,
+                        AccessToken = newAccessToken,
+                        RefreshToken = newRefreshToken,
+                        RefreshTokenExpiryTime = newRefreshExpires
+                    };
+            }
+
+            if (user.PreviousRefreshToken == refreshToken)
+            {
+                if (user.PreviousRefreshTokenExpiryTime <= now)
+                    throw new InvalidOperationException("Refresh token expired.");
+
+                var newAccessToken = await GenerateTokenString(user);
+
+                return new AuthTokens
+                {
+                    IsLoggedIn = true,
+                    AccessToken = newAccessToken,
+                    RefreshToken = user.RefreshToken!,
+                    RefreshTokenExpiryTime = user.RefreshTokenExpiryTime!.Value
+                };
+            }
+
+            throw new InvalidOperationException("Invalid refresh token.");
         }
 
         public async Task LogoutUserAsync(string username)
@@ -125,17 +160,32 @@ namespace Movie.Services
             var user = await _userManager.FindByNameAsync(username);
             if (user == null) throw new InvalidOperationException("User not found.");
 
-            return _mapper.Map<ProfileResponseDto>(user);
+            var roles = await _userManager.GetRolesAsync(user);
+            if(roles.Count == 0) 
+                throw new InvalidOperationException("User has no roles assigned.");
+
+            return new ProfileResponseDto
+            {
+                Username = user.UserName!,
+                Email = user.Email!,
+                Roles = roles
+            };
         }
 
-        private string GenerateTokenString(string username, string userId)
+        private async Task<string> GenerateTokenString(AppUser user)
         {
+            var roles = await _userManager.GetRolesAsync(user);
+
             var claims = new List<Claim>
             {
-                new Claim(ClaimTypes.Name, username),
-                new Claim(ClaimTypes.NameIdentifier, userId),
-                new Claim(ClaimTypes.Role, "User"),
+                new Claim(ClaimTypes.Name, user.UserName!),
+                new Claim(ClaimTypes.NameIdentifier, user.Id),
             };
+
+            foreach(var role in roles)
+            {
+                claims.Add(new Claim(ClaimTypes.Role, role));
+            }
 
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["JWT:SigningKey"]!));
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha512Signature);

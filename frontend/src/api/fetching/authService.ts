@@ -1,4 +1,4 @@
-import type { LoginRequest, RegisterRequest, TokenResponse, UserProfile } from "../../types/auth";
+import type { LoginRequest, RegisterRequest, SessionDto, TokenResponse, UserProfile } from "../../types/auth";
 import { api } from "../api";
 
 export async function registerUser(data: RegisterRequest){
@@ -21,7 +21,7 @@ export async function getUserProfile(){
 }
 
 
-export async function getSession(): Promise<UserProfile | null> {
-    const res = await api.get<UserProfile | null>("/account/session");
-    return res.data;
+export async function getSession(): Promise<SessionDto | null> {
+  const res = await api.get<SessionDto | null>("/account/session");
+  return res.data;
 }

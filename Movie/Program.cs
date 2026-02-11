@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Movie.Services.Interfaces;
 using AutoMapper;
+using Movie.Data.Seed;
 
 
 
@@ -16,7 +17,7 @@ namespace Movie
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
 
@@ -96,6 +97,12 @@ namespace Movie
 
             var app = builder.Build();
 
+            using (var scope = app.Services.CreateScope())
+            {
+                var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+                await IdentitySeeder.SeedRolesAsync(roleManager);
+            }
+
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
@@ -114,6 +121,8 @@ namespace Movie
             app.MapControllers();
 
             app.Run();
+            await app.RunAsync();
+
         }
     }
 }
