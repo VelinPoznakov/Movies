@@ -1,0 +1,6 @@
+create navbar for user 
+create the roles in db
+add admin path to router and navbar 
+create role based auth in the frontend
+handle admins in backend
+handle images in backend and frontend
