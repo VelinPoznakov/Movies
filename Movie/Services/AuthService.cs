@@ -36,7 +36,10 @@ namespace Movie.Services
 
             var result = await _userManager.CreateAsync(user, request.Password);
             if (!result.Succeeded)
-                throw new InvalidOperationException("User registration failed.");
+            {
+                var error = string.Join(" ", result.Errors.Select(e => e.Description));
+                throw new InvalidOperationException(error);
+            }
 
             var role = await _userManager.AddToRoleAsync(user, "User");
             if(!role.Succeeded)

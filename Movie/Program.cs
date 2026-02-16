@@ -74,6 +74,7 @@ namespace Movie
             builder.Services.AddScoped<IGenreRepository, GenreRepository>();
             builder.Services.AddScoped<IMovieRepositiory, MovieRepositiory>();
             builder.Services.AddScoped<ICommentsRepository, CommentsRepository>();
+            builder.Services.AddScoped<IRatingRepository, RatingRepository>();
 
             builder.Services.AddScoped<IDirectorService, DirectorService>();
             builder.Services.AddScoped<IGenreService, GenreService>();

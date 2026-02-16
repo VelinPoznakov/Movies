@@ -3,6 +3,7 @@ import AppLayout from "../AppLayout";
 import HomePage from "../Pages/HomePage";
 import ProtectedRoutes from "./ProtectedRoutes";
 import Login from "../Pages/Login";
+import RegisterPage from "../Pages/RegisterPage";
 
 export const router = createBrowserRouter([
 
@@ -28,7 +29,7 @@ export const router = createBrowserRouter([
       },
       {
         path: "register",
-        element: <div>register page</div>
+        element: <RegisterPage />
       },
       {
         element: <ProtectedRoutes />,

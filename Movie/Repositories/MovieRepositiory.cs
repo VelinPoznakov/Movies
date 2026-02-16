@@ -38,6 +38,7 @@ namespace Movie.Repositories
                 .Include(m => m.Director)
                 .Include(m => m.Genre)
                 .Include(m => m.User)
+                .Include(m => m.Ratings)
                 .Include(m => m.Comments)
                     .ThenInclude(c => c.User)
                 .ToListAsync();

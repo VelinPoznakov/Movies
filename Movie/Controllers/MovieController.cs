@@ -59,5 +59,14 @@ namespace Movie.Controllers
             await _service.DeleteMovie(id);
             return NoContent();
         }
+
+        [HttpPut("{id:long}/rating")]
+        [Authorize]
+        public async Task<IActionResult> UpdateMovieRatingAsync(long id, [FromBody] MovieUpdateRatingDto request)
+        {
+            var result = await _service.UpdateMovieRating(id, request);
+
+            return result == null ? NotFound() : Ok(result);
+        }
     }
 }

@@ -63,18 +63,26 @@ namespace Movie.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register(RegisterDto request)
         {
-            var tokens = await _authService.RegisterUser(request);
-            if(tokens == null) return Unauthorized();
+            try
+            {
+                var tokens = await _authService.RegisterUser(request);
+                if(tokens == null) return Unauthorized();
 
-            SetRefreshTokenCookie(tokens.RefreshToken, tokens.RefreshTokenExpiryTime);
+                SetRefreshTokenCookie(tokens.RefreshToken, tokens.RefreshTokenExpiryTime);
 
-            return Ok(
-                new TokenDto
-                {
-                    IsLoggedIn = true,
-                    Token = tokens.AccessToken
-                }
-            );
+                return Ok(
+                    new TokenDto
+                    {
+                        IsLoggedIn = true,
+                        Token = tokens.AccessToken
+                    }
+                );
+            }
+            catch(InvalidOperationException ex)
+            {
+                return BadRequest(new {Message = ex.Message});
+            }
+
         }
 
         [HttpPost("refresh-token")]

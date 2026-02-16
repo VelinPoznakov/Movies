@@ -1,11 +1,11 @@
 import { Button, Flex, Image, message, Modal, Rate, Space, Typography } from "antd";
 import type { MovieResponse } from "../types/moviesTypes";
-import { useState } from "react";
-import { useUpdateMovie } from "../Queries/Movies/movies";
+import { useUpdateMovieRating } from "../Queries/Movies/movies";
 import { useUser } from "../Contexts/useUser";
 import { useNavigate } from "react-router";
 import CommentsListComponent from "./CommentsListComponent";
 import posterFallback from "../assets/image.png";
+import { useState } from "react";
 
 const { Title, Text } = Typography;
 
@@ -18,31 +18,52 @@ type MovieModalProps = {
 function MovieDetailsComponent({ open, movie, onClose }: MovieModalProps) {
   const {user} = useUser();
   const navigate = useNavigate();
-  const [stars, setStars] = useState(movie?.rating ?? 0);
-  const {mutateAsync, isPending} = useUpdateMovie();
   const canRate = !!user;
+  const {mutateAsync: updateMovieRating, isPending} = useUpdateMovieRating();
+  // const ratings = movie?.ratings ?? [];
+  // const votes = ratings.length;
+  // const sum = ratings.reduce((acc, r) => acc + (r.value), 0);
+  // const avgStars = votes > 0 ? sum / votes : 0;
+
+  const ratings = NumberOfRatings();
+  const sum = RatingsSum();
+  const avg = Math.floor(sum / ratings);
+  const [myStars, setMyStars] = useState<number | null>(avg);
+
+  function NumberOfRatings() {
+    return movie?.ratings?.length ?? 0;
+  }
+
+  function RatingsSum(){
+
+    let count = 0;
+    for(let i = 0; i < ratings; i++){
+      count += movie?.ratings[i].value ?? 0;
+    }
+    return count;
+  }
+
 
   const handleRatingChange = async (value: number) => {
-    setStars(value);
-    if(!movie) return;
+    if(!movie || !user) return;
 
-    try{
-      await mutateAsync({
+    try {
+      await updateMovieRating({
         id: movie.id,
         data: {
-          title: movie.title,
-          timeLong: movie.timeLong,
-          rating: value,
-          directorName: movie.director.name,
-          genreName: movie.genre.name,
-          releaseDate: movie.releaseDate
+          username: user.username,
+          rating: value
         }
-      })
-    }catch{
+      });
+
+      setMyStars(value);
+
+      message.success("You rated the movie successfully");
+    } catch {
       message.error("Failed to set rating");
     }
+  };
 
-  }
 
   return(
     <Modal
@@ -111,17 +132,19 @@ function MovieDetailsComponent({ open, movie, onClose }: MovieModalProps) {
             <div>
               <Flex justify="space-between" align="center">
                 <Text strong>Rating: </Text>
-                <Rate
-                  value={stars}
-                  onChange={(value) => {
-                    if (!canRate) {
-                      message.error("You must be logged in to rate a movie");
-                      return navigate("/login");
-                    }
-                    handleRatingChange(value);
-                  }}
-                  disabled={isPending}
-                />
+                  <Rate
+                    allowClear={false}
+                    allowHalf
+                    defaultValue={myStars ?? 0}
+                    onChange={(value) => {
+                      if (!canRate) {
+                        message.error("You must be logged in to rate a movie");
+                        return navigate("/login");
+                      }
+                      handleRatingChange(value);
+                    }}
+                    disabled={isPending}
+                  />
               </Flex>
             </div>
           </Space>

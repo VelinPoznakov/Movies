@@ -1,4 +1,4 @@
-import type { CreateMovieRequest, MovieResponse, UpdateMovieRequest } from "../../types/moviesTypes";
+import type { CreateMovieRequest, MovieResponse, UpdateMovieRatingRequest, UpdateMovieRequest } from "../../types/moviesTypes";
 import { api } from "../api";
 
 export async function GetAllMoviesAsync() {
@@ -23,5 +23,10 @@ export async function UpdateMovieAsync(id: number, data: UpdateMovieRequest){
 
 export async function DeleteMovieAsync(id: number){
   await api.delete<void>(`/movie/${id}`);
+}
+
+export async function UpdateMovieRatingAsync(id: number, data: UpdateMovieRatingRequest) {
+  const res = await api.put<MovieResponse>(`/movie/${id}/rating`, data);
+  return res.data;
 }
 

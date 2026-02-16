@@ -16,6 +16,7 @@ namespace Movie.Data
         public DbSet<Director> Directors => Set<Director>();
         public DbSet<AppUser> AppUsers => Set<AppUser>();
         public DbSet<Comment> Comments => Set<Comment>();
+        public DbSet<Rating> Ratings => Set<Rating>();
 
     }
 }

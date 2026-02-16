@@ -1,4 +1,6 @@
-﻿using AutoMapper;
+﻿using System.Diagnostics;
+using AutoMapper;
+using Microsoft.AspNetCore.Identity;
 using Movie.Dtos.Genre.Request;
 using Movie.Dtos.Movies.Request;
 using Movie.Dtos.Movies.Response;
@@ -14,13 +16,17 @@ namespace Movie.Services
         private readonly IDirectorRepository _directorRepository;
         private readonly IGenreRepository _genreRepository;
         private readonly IMapper _mapper;
+        private readonly UserManager<AppUser> _userManager;
+        private readonly IRatingRepository _ratingRepository;
 
-        public MovieService(IMovieRepositiory movieRepository, IDirectorRepository directorRepository, IGenreRepository genreRepository, IMapper mapper)
+        public MovieService(IMovieRepositiory movieRepository, IDirectorRepository directorRepository, IGenreRepository genreRepository, IMapper mapper, UserManager<AppUser> userManager, IRatingRepository ratingRepository)
         {
             _movieRepository = movieRepository;
             _directorRepository = directorRepository;
             _genreRepository = genreRepository;
             _mapper = mapper;
+            _userManager = userManager;
+            _ratingRepository = ratingRepository;
         }
         public async Task<MovieResponseDto> CreateMovie(CreateMovieRequest dto, string userId)
         {
@@ -115,6 +121,40 @@ namespace Movie.Services
 
             return _mapper.Map<MovieResponseDto>(movie);
 
+        }
+
+        public async Task<MovieResponseDto> UpdateMovieRating(long id, MovieUpdateRatingDto dto)
+        {
+            var user = await _userManager.FindByNameAsync(dto.Username);
+            if(user == null)
+                throw new InvalidOperationException("User not found.");
+
+            var movie = await _movieRepository.GetMovieAsync(id);
+            if(movie == null)
+                throw new KeyNotFoundException("Movie not found.");
+
+            var existing = await _ratingRepository.GetMovieRatingByMovieAndUserAsync(movie.Id, user.Id);
+
+            if(existing == null)
+            {
+                await _ratingRepository.AddMovieRatingAsync(new Rating
+                {
+                    MovieId = movie.Id,
+                    UserId = user.Id,
+                    Value = dto.Rating,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                });
+                return _mapper.Map<MovieResponseDto>(movie);
+            }
+            else
+            {
+                existing.Value = dto.Rating;
+                existing.UpdatedAt = DateTime.UtcNow;
+            }
+
+            await _ratingRepository.UpdateMovieRatingAsync(existing);
+            return _mapper.Map<MovieResponseDto>(movie);
         }
   }
 }

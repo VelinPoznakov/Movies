@@ -4,6 +4,7 @@ using Movie.Dtos.Director.Response;
 using Movie.Dtos.Genre.Response;
 using Movie.Dtos.Movies.Request;
 using Movie.Dtos.Movies.Response;
+using Movie.Dtos.Rating;
 using Movie.Entities;
 
 namespace Movie.Dtos.Movies.Response
@@ -16,7 +17,7 @@ namespace Movie.Dtos.Movies.Response
         public DirectorReasponse? Director { get; set; }
         public DateTime ReleaseDate { get; set; }
         public GenreResponse? Genre { get; set; }
-        public double Rating { get; set; }
+        public List<RatingResponse>? Rating { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime LastUpdatedAt { get; set; }
         public string UserId { get; set; } = string.Empty;

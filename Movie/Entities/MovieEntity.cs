@@ -21,7 +21,7 @@ namespace Movie.Entities
         [ForeignKey("GenreId")]
         public long? GenreId { get; set; }
         public Genre? Genre { get; set; }
-        public double Rating { get; set; }
+        public List<Rating> Ratings { get; set; } = new();
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime LastUpdatedAt { get; set; } = DateTime.UtcNow;
 

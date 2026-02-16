@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CreateMovieAsync, DeleteMovieAsync, GetAllMoviesAsync, GetMovieByIdAsync, UpdateMovieAsync } from "../../api/fetching/moviesService";
-import type { CreateMovieRequest, UpdateMovieRequest } from "../../types/moviesTypes";
+import { CreateMovieAsync, DeleteMovieAsync, GetAllMoviesAsync, GetMovieByIdAsync, UpdateMovieAsync, UpdateMovieRatingAsync } from "../../api/fetching/moviesService";
+import type { CreateMovieRequest, UpdateMovieRatingRequest, UpdateMovieRequest } from "../../types/moviesTypes";
 import { message } from "antd";
 
 export function useMovies(){
@@ -59,6 +59,22 @@ export function useDeleteMovie(){
     },
     onError: (error) => {
       message.error(error.message);
+    }
+  })
+}
+
+type UpdateMovieRatingVariable = {
+  id: number;
+  data: UpdateMovieRatingRequest;
+}
+
+export function useUpdateMovieRating(){
+  const qc = useQueryClient();
+
+  return useMutation({
+    mutationFn:({id, data}: UpdateMovieRatingVariable) => UpdateMovieRatingAsync(id, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["movies"] });
     }
   })
 }

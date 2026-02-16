@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getSession, getUserProfile, loginUser, logoutUser, registerUser } from "../../api/fetching/authService";
 import { setAccessToken } from "../../accessToken";
 import { useNavigate } from "react-router";
-import type { LoginRequest } from "../../types/auth";
+import type { LoginRequest, RegisterRequest } from "../../types/auth";
 
 export function useGetUser() {
   return useQuery({
@@ -42,12 +42,14 @@ export function useLogin(){
 
 export function useRegister(){
   const qc = useQueryClient();
+  const navigate = useNavigate();
 
   return useMutation({
-    mutationFn: registerUser,
+    mutationFn: ({username, email, password}: RegisterRequest) => registerUser({username, email, password}),
     onSuccess: (data) => {
       setAccessToken(data.token);
       qc.invalidateQueries({ queryKey: ["user"] });
+      navigate("/", { replace: true });
     }
   });
 }
