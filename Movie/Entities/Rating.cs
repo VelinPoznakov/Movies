@@ -19,7 +19,7 @@ namespace Movie.Entities
         public string? UserId { get; set; }
         public AppUser? User { get; set; }
 
-        public int Value { get; set; }
+        public double Value { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
 

@@ -9,6 +9,6 @@ namespace Movie.Dtos.Movies.Request
     {
         public long MovieId { get; set; }
         public string Username { get; set; } = string.Empty;
-        public int Rating { get; set; }
+        public double Rating { get; set; }
     }
 }

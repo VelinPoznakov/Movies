@@ -5,7 +5,7 @@ import { useUser } from "../Contexts/useUser";
 import { useNavigate } from "react-router";
 import CommentsListComponent from "./CommentsListComponent";
 import posterFallback from "../assets/image.png";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const { Title, Text } = Typography;
 
@@ -20,15 +20,10 @@ function MovieDetailsComponent({ open, movie, onClose }: MovieModalProps) {
   const navigate = useNavigate();
   const canRate = !!user;
   const {mutateAsync: updateMovieRating, isPending} = useUpdateMovieRating();
-  // const ratings = movie?.ratings ?? [];
-  // const votes = ratings.length;
-  // const sum = ratings.reduce((acc, r) => acc + (r.value), 0);
-  // const avgStars = votes > 0 ? sum / votes : 0;
-
   const ratings = NumberOfRatings();
   const sum = RatingsSum();
-  const avg = Math.floor(sum / ratings);
-  const [myStars, setMyStars] = useState<number | null>(avg);
+  const avg = ratings > 0 ? sum / ratings : 0;
+  const [myStars, setMyStars] = useState<number | null>(null);
 
   function NumberOfRatings() {
     return movie?.ratings?.length ?? 0;
@@ -43,6 +38,12 @@ function MovieDetailsComponent({ open, movie, onClose }: MovieModalProps) {
     return count;
   }
 
+  useEffect(() => {
+    if(!movie) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setMyStars(avg);
+  }, [movie, avg, ])
+
 
   const handleRatingChange = async (value: number) => {
     if(!movie || !user) return;
@@ -55,9 +56,6 @@ function MovieDetailsComponent({ open, movie, onClose }: MovieModalProps) {
           rating: value
         }
       });
-
-      setMyStars(value);
-
       message.success("You rated the movie successfully");
     } catch {
       message.error("Failed to set rating");
@@ -133,14 +131,16 @@ function MovieDetailsComponent({ open, movie, onClose }: MovieModalProps) {
               <Flex justify="space-between" align="center">
                 <Text strong>Rating: </Text>
                   <Rate
+                    key={movie?.id}
                     allowClear={false}
                     allowHalf
-                    defaultValue={myStars ?? 0}
+                    value={myStars ?? 0}
                     onChange={(value) => {
                       if (!canRate) {
                         message.error("You must be logged in to rate a movie");
                         return navigate("/login");
                       }
+                      setMyStars(value);
                       handleRatingChange(value);
                     }}
                     disabled={isPending}

@@ -17,7 +17,7 @@ namespace Movie.Dtos.Movies.Response
         public DirectorReasponse? Director { get; set; }
         public DateTime ReleaseDate { get; set; }
         public GenreResponse? Genre { get; set; }
-        public List<RatingResponse>? Rating { get; set; }
+        public List<RatingResponse>? Ratings { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime LastUpdatedAt { get; set; }
         public string UserId { get; set; } = string.Empty;

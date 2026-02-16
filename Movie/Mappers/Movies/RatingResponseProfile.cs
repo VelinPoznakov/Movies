@@ -3,17 +3,17 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
-using Movie.Dtos.Movies.Response;
 using Movie.Dtos.Rating;
 using Movie.Entities;
 
 namespace Movie.Mappers.Movies
 {
-    public class MovieResponseProfile : Profile
+    public class RatingResponseProfile: Profile
     {
-        public MovieResponseProfile()
+        public RatingResponseProfile()
         {
-            CreateMap<MovieEntity, MovieResponseDto>();
+            CreateMap<Rating, RatingResponse>();
         }
+        
     }
 }

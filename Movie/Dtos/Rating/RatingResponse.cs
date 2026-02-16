@@ -8,6 +8,6 @@ namespace Movie.Dtos.Rating
     public class RatingResponse
     {
         public long Id { get; set; }
-        public int Value { get; set; }
+        public double Value { get; set; }
     }
 }

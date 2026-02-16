@@ -30,7 +30,6 @@ export interface MovieResponse {
   releaseDate: string;
   genre: GenreResponse;
   ratings: RatingResponse[];
-  numberOfVotes: number;
   createdAt: string;
   updatedAt: string;
   user: UserProfile;
