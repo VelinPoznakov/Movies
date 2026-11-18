@@ -98,12 +98,6 @@ namespace Movie
 
             var app = builder.Build();
 
-            using (var scope = app.Services.CreateScope())
-            {
-                var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-                await IdentitySeeder.SeedRolesAsync(roleManager);
-            }
-
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();

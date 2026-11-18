@@ -2,17 +2,43 @@ using Microsoft.AspNetCore.Identity;
 
 namespace Movie.Data.Seed
 {
-    public static class IdentitySeeder
+    public class IdentitySeeder: IIdentitySeeder
     {
-        public static async Task SeedRolesAsync(RoleManager<IdentityRole> roleManager)
-        {
-            string[] roles = ["User", "Admin", "SuperAdmin"];
+        private readonly string[] ApplicationRoles =
+        [
+            "User",
+            "Admin",
+            "SuperAdmin"
+        ];
+        
+        private readonly RoleManager<IdentityRole<Guid>> _roleManager;
+        private readonly ILogger<IdentitySeeder> _logger;
 
-            foreach (var role in roles)
+        public IdentitySeeder(
+            RoleManager<IdentityRole<Guid>> roleManager,
+            ILogger<IdentitySeeder> logger)
+        {
+            this._roleManager = roleManager;
+            this._logger = logger;
+        }
+
+        public async Task SeedRolesAsync()
+        {
+            foreach(string role in ApplicationRoles)
             {
-                if (!await roleManager.RoleExistsAsync(role))
+                bool roleExist = await _roleManager.RoleExistsAsync(role);
+
+                if (!roleExist)
                 {
-                    await roleManager.CreateAsync(new IdentityRole(role));
+                    IdentityRole<Guid> newRole = new IdentityRole<Guid>(role);
+                    IdentityResult identityRole = await _roleManager.CreateAsync(newRole);
+
+                    if (!identityRole.Succeeded)
+                    {
+                        _logger.LogError($"There is a problem seeding role {role}: {identityRole.Errors}");
+                        throw new Exception();
+                    }
+                        
                 }
             }
         }
