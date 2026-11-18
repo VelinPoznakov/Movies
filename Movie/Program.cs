@@ -1,17 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Movie.Data;
-using Movie.Repositories;
-using Movie.Repositories.Interfaces;
-using Movie.Services;
 using Movie.Entities;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using Movie.Services.Interfaces;
-using AutoMapper;
-using Movie.Data.Seed;
-
-
+using Movie.Infrastructure;
 
 namespace Movie
 {
@@ -19,92 +10,59 @@ namespace Movie
     {
         public static async Task Main(string[] args)
         {
-            var builder = WebApplication.CreateBuilder(args);
+            WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
+            string dbConnectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+                ?? throw new ArgumentException("Database connection string missing");
+            
+            builder.Services.AddDbContext<MovieDbContext>(options =>
+                options.UseNpgsql(dbConnectionString));
+
+            builder.Services
+                .AddIdentityCore<AppUser>(options => options.AddIdentityConfiguration(builder.Configuration))
+                .AddRoles<IdentityRole<Guid>>()
+                .AddEntityFrameworkStores<MovieDbContext>();
+            
+            builder
+                .Services
+                .AddAuthentication(options => options.AddShemaConfiguration())
+                .AddJwtBearer(options => options.AddJWTBearerOptions(builder.Configuration));
+
+            builder.Services.AddServices();
+            builder.Services.StartupSeeders();
+            builder.Services.AddRepositories();
+            builder.Services.AddBackgroundServices();
+            
+            builder.Services.AddAzureBlobStorage(builder.Configuration);
+            
+            string[] cors = builder
+                .Configuration
+                .GetSection("Cors")
+                .ToString()?
+                .Split(", ") ?? throw new ArgumentException("Cors configuration missing");
+
+            builder.Services.AddCors(options => options.AddCorsOptions(cors));
+            
+            builder.Services.AddExternalSystemServices(builder.Configuration);
+            
             builder.Services.AddControllers();
 
             builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
+            builder.Services.AddSwaggerGen(options => options.AddSwaggerGenOptions(builder.Configuration));
 
+            WebApplication app = builder.Build();
 
-
-            builder.Services.AddDbContext<MovieDbContext>(options =>
-                options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
-
-
-            builder.Services.AddIdentity<AppUser, IdentityRole>(options =>
-            {
-                options.Password.RequireDigit = true;
-                options.Password.RequireLowercase = true;
-                options.Password.RequireUppercase = true;
-                options.Password.RequireNonAlphanumeric = true;
-                options.Password.RequiredLength = 12;
-                options.User.RequireUniqueEmail = true;
-                options.Lockout.MaxFailedAccessAttempts = 10;
-                options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
-                options.Lockout.AllowedForNewUsers = true;
-            })
-            .AddEntityFrameworkStores<MovieDbContext>();
-
-            builder.Services.AddAuthentication(options =>
-            {
-                options.DefaultAuthenticateScheme =
-                options.DefaultChallengeScheme =
-                options.DefaultForbidScheme =
-                options.DefaultScheme = 
-                options.DefaultSignInScheme =
-                options.DefaultSignOutScheme = JwtBearerDefaults.AuthenticationScheme;
-            }).AddJwtBearer(options =>
-            {
-                options.TokenValidationParameters = new TokenValidationParameters
-                {
-                    ValidateIssuer = true,
-                    ValidIssuer = builder.Configuration["JWT:Issuer"],
-                    ValidateAudience = true,
-                    ValidAudience = builder.Configuration["JWT:Audience"],
-                    ValidateIssuerSigningKey = true,
-                    ClockSkew = TimeSpan.Zero,
-                    IssuerSigningKey = new SymmetricSecurityKey(
-                        System.Text.Encoding.UTF8.GetBytes(builder.Configuration["JWT:SigningKey"]!)
-                    )
-                };
-            });
-
-            builder.Services.AddScoped<IDirectorRepository, DirectorRepository>();
-            builder.Services.AddScoped<IGenreRepository, GenreRepository>();
-            builder.Services.AddScoped<IMovieRepositiory, MovieRepositiory>();
-            builder.Services.AddScoped<ICommentsRepository, CommentsRepository>();
-            builder.Services.AddScoped<IRatingRepository, RatingRepository>();
-
-            builder.Services.AddScoped<IDirectorService, DirectorService>();
-            builder.Services.AddScoped<IGenreService, GenreService>();
-            builder.Services.AddScoped<IMovieService, MovieService>();
-            builder.Services.AddScoped<IAuthService, AuthService>();
-            builder.Services.AddScoped<ICommentService, CommentsService>();
-            
-            builder.Services.AddAutoMapper(typeof(Program).Assembly);
-
-            builder.Services.AddCors(options =>
-            {
-                options.AddPolicy("AllowReactApp", policy =>
-                {
-                    policy.WithOrigins("http://localhost:5173")
-                        .AllowAnyHeader()
-                        .AllowAnyMethod()
-                        .AllowCredentials();
-                });
-            });
-
-
-            var app = builder.Build();
+            await app.EnsureBlobContainersExistsAsync(app.Configuration);
 
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
-                app.UseSwaggerUI();
+                app.UseSwaggerUI(options => options.AddSwaggerUIOptions(app.Environment, app.Configuration));
             }
 
-            app.UseCors("AllowReactApp");
+            app.RoleSeeder(app.Configuration);
+            
+            app.UseCors(CorsPolicies.CORSPOLICYNAME);
 
             app.UseHttpsRedirection();
 
@@ -112,12 +70,9 @@ namespace Movie
 
             app.UseAuthorization();
 
-
             app.MapControllers();
-
+            
             app.Run();
-            await app.RunAsync();
-
         }
     }
 }
