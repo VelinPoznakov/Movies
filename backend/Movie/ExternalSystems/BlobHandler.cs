@@ -48,9 +48,4 @@ public class BlobHandler: IBlobHandler
 
         return deleted;
     }
-
-    public Task<string> GetUrlAsync(string containerName, string blobName)
-    {
-        throw new NotImplementedException();
-    }
 }
