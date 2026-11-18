@@ -1,5 +1,4 @@
-﻿using AutoMapper;
-using Movie.Dtos.Comments.Response;
+﻿using Movie.Dtos.Comments.Response;
 using Movie.Dtos.Director.Response;
 using Movie.Dtos.Genre.Response;
 using Movie.Dtos.Movies.Request;

@@ -9,6 +9,5 @@ namespace Movie.Dtos.Auth
     {
         public bool IsLoggedIn { get; set; }
         public string? Token { get; set; } = string.Empty;
-        public ProfileResponseDto? User { get; set; }
     }
 }

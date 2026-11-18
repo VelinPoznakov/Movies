@@ -1,4 +1,3 @@
-using AutoMapper;
 using Movie.Dtos.Director.Request;
 using Movie.Entities;
 

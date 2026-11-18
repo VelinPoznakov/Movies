@@ -1,5 +1,4 @@
-﻿using AutoMapper;
-using Movie.Dtos.Movies.Request;
+﻿using Movie.Dtos.Movies.Request;
 using Movie.Entities;
 
 namespace Movie.Dtos.Movies.Request

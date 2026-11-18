@@ -1,5 +1,4 @@
-﻿using AutoMapper;
-using Movie.Dtos.Director.Response;
+﻿using Movie.Dtos.Director.Response;
 using Movie.Entities;
 
 namespace Movie.Dtos.Director.Response
