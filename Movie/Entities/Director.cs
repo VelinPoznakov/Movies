@@ -1,14 +1,18 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
+
+using static Movie.Common.EntitiesConstants.Director;
 
 namespace Movie.Entities
 {
-    public class Director
+    public class Director: BaseTMDB
     {
-        [Key]
-        public long Id { get; set; }
+        [MaxLength(NameMaxLength)]
+        public string Name { get; set; } = null!;
+        
+        [MaxLength(ProfilePathMaxLength)]
+        public string? ProfilePath { get; set; }
 
-        [Required, MaxLength(100)]
-        public string Name { get; set; } = string.Empty;
-        public List<MovieEntity>? MovieEntitys { get; set; }
+        public virtual ICollection<MoviesDirectors>  MoviesDirectors { get; set; }
+            = new List<MoviesDirectors>();
     }
 }

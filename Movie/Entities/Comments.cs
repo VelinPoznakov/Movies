@@ -1,27 +1,22 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
+using static Movie.Common.EntitiesConstants.Comment;
 
 namespace Movie.Entities
 {
-    public class Comment
+    public class Comment: BaseEntity
     {
-        [Key]
-        public long Id { get; set; }
+        [Required]
+        [MaxLength(ContentMaxLength)]
+        public string Content { get; set; } = null!;
 
-        [Required, MaxLength(1000)]
-        public string Content { get; set; } = string.Empty;
+        [ForeignKey(nameof(Movie))]
+        public int MovieId { get; set; }
+        public virtual MovieEntity Movie { get; set; } = null!;
 
-        [ForeignKey("Movie")]
-        public long? MovieId { get; set; }
-        public MovieEntity? Movie { get; set; }
-
-        public string? UserId { get; set; }
-        public AppUser? User { get; set; }
-
-        public DateTime CreatedAt { get; set; }
-        public DateTime? UpdatedAt { get; set; }
-
-
+        [ForeignKey(nameof(User))]
+        public Guid UserId { get; set; }
+        public virtual AppUser User { get; set; } = null!;
     }
 }

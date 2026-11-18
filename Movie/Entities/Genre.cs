@@ -1,17 +1,16 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
+
+using static Movie.Common.EntitiesConstants.Genre;
 
 namespace Movie.Entities
 {
-    public class Genre
+    public class Genre: BaseTMDB
     {
-        [Key]
-        public long Id { get; set; }
-
-        [Required, MaxLength(100)]
-        public string Name { get; set; } = string.Empty;
-        public List<MovieEntity>? MovieEntitys { get; set; }
-
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-        public DateTime ModifiedAt { get; set; } = DateTime.UtcNow;
+        [Required] 
+        [MaxLength(NameMaxLength)] 
+        public string Name { get; set; } = null!;
+        
+        public virtual ICollection<MoviesGenres> MoviesGenres { get; set; }
+            = new List<MoviesGenres>();
     }
 }

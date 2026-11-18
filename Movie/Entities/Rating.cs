@@ -1,28 +1,17 @@
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Movie.Entities
 {
-    public class Rating
+    public class Rating: BaseEntity
     {
-        [Key]
-        public long Id { get; set; }
+        [ForeignKey(nameof(Movie))]
+        public int MovieId { get; set; }
+        public virtual MovieEntity Movie { get; set; } = null!;
 
-        [ForeignKey("MovieId")]
-        public long? MovieId { get; set; }
-        public MovieEntity? Movie { get; set; }
-
-        public string? UserId { get; set; }
-        public AppUser? User { get; set; }
-
+        [ForeignKey(nameof(User))]
+        public Guid UserId { get; set; }
+        public virtual AppUser User { get; set; } = null!;
+ 
         public double Value { get; set; }
-        public DateTime CreatedAt { get; set; }
-        public DateTime UpdatedAt { get; set; }
-
-
     }
 }

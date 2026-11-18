@@ -5,18 +5,38 @@ using Movie.Entities;
 
 namespace Movie.Data
 {
-    public class MovieDbContext: IdentityDbContext<AppUser>
+    public class MovieDbContext: IdentityDbContext<AppUser, IdentityRole<Guid>, Guid>
     {
         public MovieDbContext(DbContextOptions<MovieDbContext> options) : base(options)
         {
+            
         }
-        public DbSet<MovieEntity> Movies => Set<MovieEntity>();
 
-        public DbSet<Genre> Genres => Set<Genre>();
-        public DbSet<Director> Directors => Set<Director>();
-        public DbSet<AppUser> AppUsers => Set<AppUser>();
-        public DbSet<Comment> Comments => Set<Comment>();
-        public DbSet<Rating> Ratings => Set<Rating>();
+        public virtual DbSet<MovieEntity> Movies { get; set; } = null!;
 
+        public virtual DbSet<Genre> Genres { get; set; } = null!;
+        
+        public virtual DbSet<Director> Directors { get; set; } = null!;
+        
+        public virtual DbSet<AppUser> AppUsers { get; set; } = null!;
+        
+        public virtual DbSet<Comment> Comments { get; set; } = null!;
+        
+        public virtual DbSet<Rating> Ratings { get; set; } = null!;
+
+        public virtual DbSet<ProducerCompany> ProducerCompanies { get; set; } = null!;
+
+        public virtual DbSet<MoviesDirectors> MoviesDirectors { get; set; } = null!;
+
+        public virtual DbSet<MoviesProducerCompanies> MoviesProducerCompanies { get; set; } = null!;
+
+        public virtual DbSet<MoviesGenres> MoviesGenres { get; set; } = null!;
+
+        protected override void OnModelCreating(ModelBuilder builder)
+        {
+            builder.ApplyConfigurationsFromAssembly(typeof(MovieDbContext).Assembly);
+            
+            base.OnModelCreating(builder);
+        }
     }
 }
