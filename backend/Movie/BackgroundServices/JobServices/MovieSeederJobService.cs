@@ -236,6 +236,8 @@ public class MovieSeederJobService: IScheduleTask
                 }
                 
                 await _movieRepository.CreateEntityAsync(newMovie);
+
+                _movieRepository.ClearTracking();
             }
             
             if (moviesCollection.TotalPages > TMDB_MAX_PAGES)
@@ -255,9 +257,9 @@ public class MovieSeederJobService: IScheduleTask
         if (string.IsNullOrEmpty(tmdbImageFileName))
             return null;
 
-        byte[]? imageInBytes = await _requestHandler.GetImageAsync($"{size}{tmdbImageFileName}");
+        await using Stream? imageStream = await _requestHandler.GetImageStreamAsync($"{size}{tmdbImageFileName}");
 
-        if (imageInBytes == null || imageInBytes.Length == 0)
+        if (imageStream == null)
             return null;
 
         string formatedTmdbImageFileName = CreateImageBlobName(tmdbImageFileName);
@@ -266,7 +268,7 @@ public class MovieSeederJobService: IScheduleTask
             contentType = "application/octet-stream";
 
         string blobStorageResult = await _blobHandler.UploadAsync(containerName, formatedTmdbImageFileName,
-            imageInBytes, contentType);
+            imageStream, contentType);
 
         return blobStorageResult;
     }

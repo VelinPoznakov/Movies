@@ -176,4 +176,6 @@ public class BaseRepository<T>: IBaseRepository<T> where T : class
         return await _context.Set<T>()
             .AnyAsync(e => EF.Property<int>(e, "TmdbId") == tmdbId);
     }
+
+    public void ClearTracking() => _context.ChangeTracker.Clear();
 }

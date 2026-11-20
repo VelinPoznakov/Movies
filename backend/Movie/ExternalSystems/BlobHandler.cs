@@ -34,6 +34,23 @@ public class BlobHandler: IBlobHandler
         return blob.Uri.ToString();
     }
 
+    // Streams the content to storage in chunks, without holding the whole file in memory
+    public async Task<string> UploadAsync(string containerName, string blobName, Stream content, string contentType)
+    {
+        BlobClient blob = _blobClient
+            .GetBlobContainerClient(containerName)
+            .GetBlobClient(blobName);
+
+        await blob.UploadAsync(content, new BlobUploadOptions
+        {
+            HttpHeaders = new BlobHttpHeaders { ContentType = contentType }
+        });
+
+        _logger.LogInformation("Uploaded {Container}/{Blob}", containerName, blobName);
+
+        return blob.Uri.ToString();
+    }
+
     public async Task<bool> DeleteAsync(string url, string containerName)
     {
         BlobUriBuilder parts = new(new Uri(url));

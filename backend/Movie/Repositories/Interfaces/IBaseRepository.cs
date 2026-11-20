@@ -37,4 +37,6 @@ public interface IBaseRepository<T>
     Task<int> CountAsync(Expression<Func<T, bool>>? filter = null);
 
     Task<bool> DoesEntityExistByTmdbIdAsync(long tmdbId);
+
+    void ClearTracking();
 }

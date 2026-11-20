@@ -1,6 +1,8 @@
 using System.Globalization;
 using Microsoft.AspNetCore.WebUtilities;
 using Movie.Dtos.TMDB.Movie;
+using Movie.Dtos.TMDB.Person;
+using Movie.Dtos.TMDB.ProductionCompany;
 using Movie.ExternalSystems.Contracts;
 
 namespace Movie.ExternalSystems;
@@ -70,18 +72,28 @@ public class TMDBHandler: ITMDBHandler
         return responseDto;
     }
 
-    public async Task<byte[]?> GetImageAsync(string imageUrl)
+    // GET person/{id} → profile_path of a director/actor
+    public Task<PersonResponseDto?> GetPersonAsync(long tmdbId) =>
+        GetAsync<PersonResponseDto>(string.Format(_endpoints["Person"]!, tmdbId));
+
+    // GET company/{id} → logo_path of a production company
+    public Task<CompanyDetailsResponseDto?> GetCompanyAsync(long tmdbId) =>
+        GetAsync<CompanyDetailsResponseDto>(string.Format(_endpoints["Company"]!, tmdbId));
+
+    public async Task<Stream?> GetImageStreamAsync(string imagePath)
     {
-        using HttpResponseMessage response = await _imageClient.GetAsync(imageUrl);
+        HttpResponseMessage response = await _imageClient.GetAsync(imagePath, HttpCompletionOption.ResponseHeadersRead);
 
         if (!response.IsSuccessStatusCode)
         {
-            _logger.LogError("Image {Url} returned {Status}", imageUrl, (int)response.StatusCode);
+            _logger.LogError("Image {Path} returned {Status}", imagePath, (int)response.StatusCode);
+
+            response.Dispose();
 
             return null;
         }
 
-        return await response.Content.ReadAsByteArrayAsync();
+        return await response.Content.ReadAsStreamAsync();
     }
  
     private async Task<T?> GetAsync<T>(string url)
