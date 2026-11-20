@@ -28,12 +28,7 @@ public static class AppServices
 
     public static void AddRepositories(this IServiceCollection services)
     {
-        
-        // services.AddScoped<IDirectorService, DirectorService>();
-        // services.AddScoped<IGenreService, GenreService>();
-        // services.AddScoped<IMovieService, MovieService>();
-        // services.AddScoped<IAuthService, AuthService>();
-        // services.AddScoped<ICommentService, CommentsService>();
+        services.AddScoped(typeof(IBaseRepository<>), typeof(BaseRepository<>));
     }
     
     public static void AddBackgroundServices(this IServiceCollection services)
