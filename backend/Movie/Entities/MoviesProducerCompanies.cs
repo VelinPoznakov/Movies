@@ -7,10 +7,10 @@ namespace Movie.Entities;
 public class MoviesProducerCompanies
 {
     [ForeignKey(nameof(Movie))]
-    public int MovieId { get; set; }
+    public long MovieId { get; set; }
     public virtual MovieEntity Movie { get; set; } = null!;
     
     [ForeignKey(nameof(ProducerCompany))]
-    public int ProducerCompanyId { get; set; }
+    public long ProducerCompanyId { get; set; }
     public virtual ProducerCompany ProducerCompany { get; set; } = null!;
 }

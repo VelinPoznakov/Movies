@@ -5,7 +5,7 @@ namespace Movie.Entities
     public class Rating: BaseEntity
     {
         [ForeignKey(nameof(Movie))]
-        public int MovieId { get; set; }
+        public long MovieId { get; set; }
         public virtual MovieEntity Movie { get; set; } = null!;
 
         [ForeignKey(nameof(User))]

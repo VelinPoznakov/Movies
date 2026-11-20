@@ -10,19 +10,21 @@ public static class HttpClientsConfigurations
     {
         IConfigurationSection section = config.GetSection("TMDBSettings");
 
-        services.AddHttpClient<ITMDBHandler, TMDBHandler>("TMDB", client =>
+        services.AddHttpClient("TMDB", client =>
         {
             client.BaseAddress =
-                new Uri($"{section.GetValue<string>("Host")}{section.GetValue<string>("HostVersion")}");
+                new Uri($"{section.GetValue<string>("Host")}{section.GetValue<string>("HostVersion")}/");
             client.DefaultRequestHeaders.Authorization =
                 new AuthenticationHeaderValue("Bearer", section.GetValue<string>("AccessToken"));
 
             client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
         });
-        
+
         services.AddHttpClient("TMDBImages", client =>
         {
-            client.BaseAddress = new Uri(section.GetValue<string>("ImageHost")!); 
+            client.BaseAddress = new Uri(section.GetValue<string>("ImageHost")!);
         });
+
+        services.AddScoped<ITMDBHandler, TMDBHandler>();
     }
 }

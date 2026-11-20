@@ -244,11 +244,11 @@ namespace Movie.Migrations
 
             modelBuilder.Entity("Movie.Entities.Comment", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+                        .HasColumnType("bigint");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
                     b.Property<string>("Content")
                         .IsRequired()
@@ -261,8 +261,8 @@ namespace Movie.Migrations
                     b.Property<DateTime>("ModifiedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<int>("MovieId")
-                        .HasColumnType("integer");
+                    b.Property<long>("MovieId")
+                        .HasColumnType("bigint");
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
@@ -278,11 +278,11 @@ namespace Movie.Migrations
 
             modelBuilder.Entity("Movie.Entities.Director", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+                        .HasColumnType("bigint");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -309,11 +309,11 @@ namespace Movie.Migrations
 
             modelBuilder.Entity("Movie.Entities.Genre", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+                        .HasColumnType("bigint");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -336,11 +336,11 @@ namespace Movie.Migrations
 
             modelBuilder.Entity("Movie.Entities.MovieEntity", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+                        .HasColumnType("bigint");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
                     b.Property<string>("BackDroopPoster")
                         .HasMaxLength(200)
@@ -399,11 +399,11 @@ namespace Movie.Migrations
 
             modelBuilder.Entity("Movie.Entities.MoviesDirectors", b =>
                 {
-                    b.Property<int>("MovieId")
-                        .HasColumnType("integer");
+                    b.Property<long>("MovieId")
+                        .HasColumnType("bigint");
 
-                    b.Property<int>("DirectorId")
-                        .HasColumnType("integer");
+                    b.Property<long>("DirectorId")
+                        .HasColumnType("bigint");
 
                     b.HasKey("MovieId", "DirectorId");
 
@@ -414,11 +414,11 @@ namespace Movie.Migrations
 
             modelBuilder.Entity("Movie.Entities.MoviesGenres", b =>
                 {
-                    b.Property<int>("MovieId")
-                        .HasColumnType("integer");
+                    b.Property<long>("MovieId")
+                        .HasColumnType("bigint");
 
-                    b.Property<int>("GenreId")
-                        .HasColumnType("integer");
+                    b.Property<long>("GenreId")
+                        .HasColumnType("bigint");
 
                     b.HasKey("MovieId", "GenreId");
 
@@ -429,11 +429,11 @@ namespace Movie.Migrations
 
             modelBuilder.Entity("Movie.Entities.MoviesProducerCompanies", b =>
                 {
-                    b.Property<int>("MovieId")
-                        .HasColumnType("integer");
+                    b.Property<long>("MovieId")
+                        .HasColumnType("bigint");
 
-                    b.Property<int>("ProducerCompanyId")
-                        .HasColumnType("integer");
+                    b.Property<long>("ProducerCompanyId")
+                        .HasColumnType("bigint");
 
                     b.HasKey("MovieId", "ProducerCompanyId");
 
@@ -444,11 +444,11 @@ namespace Movie.Migrations
 
             modelBuilder.Entity("Movie.Entities.ProducerCompany", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+                        .HasColumnType("bigint");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -475,11 +475,11 @@ namespace Movie.Migrations
 
             modelBuilder.Entity("Movie.Entities.Rating", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+                        .HasColumnType("bigint");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -487,8 +487,8 @@ namespace Movie.Migrations
                     b.Property<DateTime>("ModifiedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<int>("MovieId")
-                        .HasColumnType("integer");
+                    b.Property<long>("MovieId")
+                        .HasColumnType("bigint");
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");

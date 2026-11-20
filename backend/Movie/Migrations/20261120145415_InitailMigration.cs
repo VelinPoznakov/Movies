@@ -63,7 +63,7 @@ namespace Movie.Migrations
                 name: "Directors",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "integer", nullable: false)
+                    Id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     Name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
                     ProfilePath = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: true),
@@ -80,7 +80,7 @@ namespace Movie.Migrations
                 name: "Genres",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "integer", nullable: false)
+                    Id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     Name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
@@ -96,7 +96,7 @@ namespace Movie.Migrations
                 name: "ProducerCompanies",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "integer", nullable: false)
+                    Id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     Name = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
                     LogoPath = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: true),
@@ -219,7 +219,7 @@ namespace Movie.Migrations
                 name: "Movies",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "integer", nullable: false)
+                    Id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     Title = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
                     Description = table.Column<string>(type: "text", nullable: false),
@@ -250,10 +250,10 @@ namespace Movie.Migrations
                 name: "Comments",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "integer", nullable: false)
+                    Id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     Content = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: false),
-                    MovieId = table.Column<int>(type: "integer", nullable: false),
+                    MovieId = table.Column<long>(type: "bigint", nullable: false),
                     UserId = table.Column<Guid>(type: "uuid", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     ModifiedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
@@ -279,8 +279,8 @@ namespace Movie.Migrations
                 name: "MoviesDirectors",
                 columns: table => new
                 {
-                    DirectorId = table.Column<int>(type: "integer", nullable: false),
-                    MovieId = table.Column<int>(type: "integer", nullable: false)
+                    DirectorId = table.Column<long>(type: "bigint", nullable: false),
+                    MovieId = table.Column<long>(type: "bigint", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -303,8 +303,8 @@ namespace Movie.Migrations
                 name: "MoviesGenres",
                 columns: table => new
                 {
-                    MovieId = table.Column<int>(type: "integer", nullable: false),
-                    GenreId = table.Column<int>(type: "integer", nullable: false)
+                    MovieId = table.Column<long>(type: "bigint", nullable: false),
+                    GenreId = table.Column<long>(type: "bigint", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -327,8 +327,8 @@ namespace Movie.Migrations
                 name: "MoviesProducerCompanies",
                 columns: table => new
                 {
-                    MovieId = table.Column<int>(type: "integer", nullable: false),
-                    ProducerCompanyId = table.Column<int>(type: "integer", nullable: false)
+                    MovieId = table.Column<long>(type: "bigint", nullable: false),
+                    ProducerCompanyId = table.Column<long>(type: "bigint", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -351,9 +351,9 @@ namespace Movie.Migrations
                 name: "Ratings",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "integer", nullable: false)
+                    Id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    MovieId = table.Column<int>(type: "integer", nullable: false),
+                    MovieId = table.Column<long>(type: "bigint", nullable: false),
                     UserId = table.Column<Guid>(type: "uuid", nullable: false),
                     Value = table.Column<double>(type: "double precision", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),

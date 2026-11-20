@@ -22,7 +22,7 @@ public class MovieDetailsResponseDto: MovieResponseDto
         = new List<ProductionComapnyResponseDto>();
 
     [JsonPropertyName("runtime")]
-    public int? Runtime { get; set; }
+    public int Runtime { get; set; }
 
     [JsonPropertyName("status")]
     public string Status { get; set; } = null!;

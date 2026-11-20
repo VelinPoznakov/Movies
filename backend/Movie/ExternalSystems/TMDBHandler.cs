@@ -1,6 +1,5 @@
 using System.Globalization;
 using Microsoft.AspNetCore.WebUtilities;
-using Movie.BackgroundServices.JobServices;
 using Movie.Dtos.TMDB.Movie;
 using Movie.ExternalSystems.Contracts;
 
@@ -8,26 +7,24 @@ namespace Movie.ExternalSystems;
 
 public class TMDBHandler: ITMDBHandler
 {
-    private readonly ILogger<MovieSeederJobService> _logger;
+    private readonly ILogger<TMDBHandler> _logger;
     private readonly IConfigurationSection _endpoints;
     private readonly IConfigurationSection _query;
     private readonly HttpClient _apiClient;
     private readonly HttpClient _imageClient;
-    private readonly DateOnly _startDate;
 
-    public TMDBHandler(ILogger<MovieSeederJobService> logger,
+    public TMDBHandler(ILogger<TMDBHandler> logger,
         IHttpClientFactory httpClientFactory,
         IConfiguration configuration)
     {
         _logger = logger;
         _apiClient = httpClientFactory.CreateClient("TMDB");
         _imageClient = httpClientFactory.CreateClient("TMDBImages");
-        _endpoints = configuration.GetSection("Endpoints");
-        _query = configuration.GetSection("Query");
-        _startDate = configuration.GetValue<DateOnly>("FromDate");
+        _endpoints = configuration.GetSection("TMDBSettings:Endpoints");
+        _query = configuration.GetSection("TMDBSettings:Query");
     }
 
-    public async Task<MovieCollectionResponseDto> DiscoverMoviesAsync(DateOnly fromDate, int page = 1)
+    public async Task<MovieCollectionResponseDto?> DiscoverMoviesAsync(DateOnly fromDate, DateOnly toDate, int page = 1)
     {
         string url = QueryHelpers.AddQueryString(_endpoints["DiscoverMovies"]!,
             new Dictionary<string, string?>
@@ -39,21 +36,21 @@ public class TMDBHandler: ITMDBHandler
                 ["vote_count.gte"] = _query["MinVoteCount"],
                 ["with_runtime.gte"] = _query["MinRuntime"],
                 ["primary_release_date.gte"] = fromDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
-                ["primary_release_date.lte"] = _startDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)
+                ["primary_release_date.lte"] = toDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)
             }
         );
         
         MovieCollectionResponseDto? result = await GetAsync<MovieCollectionResponseDto>(url);
-        
-        if(result == null)
-            throw new Exception("Could not find movie collection response");
+
+        if (result == null || result.Movies.Count == 0)
+            return null;
 
         return result;
     }
     
-    public async Task<MovieDetailsResponseDto> GetMovieDetailsAsync(long tmdbId, bool includeCast = false)
+    public async Task<MovieDetailsResponseDto?> GetMovieDetailsAsync(long tmdbId, bool includeCast = false)
     {
-        string formatedMovieDetailsUri = string.Format(_query["MovieDetails"]!, tmdbId);
+        string formatedMovieDetailsUri = string.Format(_endpoints["MovieDetails"]!, tmdbId);
 
         Dictionary<string, string?> queryParams = new Dictionary<string, string?>()
         {
@@ -68,7 +65,7 @@ public class TMDBHandler: ITMDBHandler
         MovieDetailsResponseDto? responseDto = await GetAsync<MovieDetailsResponseDto>(url);
         
         if (responseDto == null)
-            throw new Exception("Could not find movie details response");
+            return null;
         
         return responseDto;
     }
@@ -79,14 +76,12 @@ public class TMDBHandler: ITMDBHandler
 
         if (!response.IsSuccessStatusCode)
         {
-            string error = await response.Content.ReadAsStringAsync();
-            
-            _logger.LogError($"Error on {_imageClient.BaseAddress}{imageUrl}: Status {response.StatusCode}: Error: {error}");
+            _logger.LogError("Image {Url} returned {Status}", imageUrl, (int)response.StatusCode);
 
-            return default;
+            return null;
         }
-        
-        return await response.Content.ReadFromJsonAsync<byte[]>() ?? Array.Empty<byte>();
+
+        return await response.Content.ReadAsByteArrayAsync();
     }
  
     private async Task<T?> GetAsync<T>(string url)

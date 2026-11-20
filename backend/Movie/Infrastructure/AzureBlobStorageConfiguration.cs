@@ -1,4 +1,5 @@
 using Azure.Storage.Blobs;
+using Azure.Storage.Blobs.Models;
 using Movie.ExternalSystems;
 using Movie.ExternalSystems.Contracts;
 
@@ -29,6 +30,12 @@ public static class AzureBlobStorageConfiguration
             .Select(c => c.Value!);
 
         foreach (string container in containers)
-            await client.GetBlobContainerClient(container).CreateIfNotExistsAsync();
+        {
+            BlobContainerClient containerClient = client.GetBlobContainerClient(container);
+
+            await containerClient.CreateIfNotExistsAsync(PublicAccessType.Blob);
+
+            await containerClient.SetAccessPolicyAsync(PublicAccessType.Blob);
+        }
     }
 }

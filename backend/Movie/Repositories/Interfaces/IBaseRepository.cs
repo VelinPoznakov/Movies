@@ -13,7 +13,7 @@ public interface IBaseRepository<T>
     Task<bool> BulkDeleteEntitiesAsync(ICollection<T> entities);
 
     Task<T?> GetEntityByIdAsync(
-        int id,
+        long id,
         Func<IQueryable<T>, IQueryable<T>>? include = null,
         Expression<Func<T, T>>? projection = null,
         bool searchByTmdbId = false,
@@ -36,5 +36,5 @@ public interface IBaseRepository<T>
 
     Task<int> CountAsync(Expression<Func<T, bool>>? filter = null);
 
-    Task<bool> DoesEntityExistByTmdbIdAsync(int tmdbId);
+    Task<bool> DoesEntityExistByTmdbIdAsync(long tmdbId);
 }

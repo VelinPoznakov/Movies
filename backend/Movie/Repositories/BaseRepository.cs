@@ -54,7 +54,7 @@ public class BaseRepository<T>: IBaseRepository<T> where T : class
     }
     
     public async Task<T?> GetEntityByIdAsync(
-        int id,
+        long id,
         Func<IQueryable<T>, IQueryable<T>>? include = null,
         Expression<Func<T, T>>? projection = null,
         bool searchByTmdbId = false,
@@ -171,7 +171,7 @@ public class BaseRepository<T>: IBaseRepository<T> where T : class
         return await query.CountAsync();
     }
 
-    public async Task<bool> DoesEntityExistByTmdbIdAsync(int tmdbId)
+    public async Task<bool> DoesEntityExistByTmdbIdAsync(long tmdbId)
     {
         return await _context.Set<T>()
             .AnyAsync(e => EF.Property<int>(e, "TmdbId") == tmdbId);

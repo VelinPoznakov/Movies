@@ -12,7 +12,7 @@ namespace Movie.Entities
         public string Content { get; set; } = null!;
 
         [ForeignKey(nameof(Movie))]
-        public int MovieId { get; set; }
+        public long MovieId { get; set; }
         public virtual MovieEntity Movie { get; set; } = null!;
 
         [ForeignKey(nameof(User))]

@@ -7,10 +7,10 @@ namespace Movie.Entities;
 public class MoviesDirectors
 {
     [ForeignKey(nameof(Director))]
-    public int DirectorId { get; set; }
+    public long DirectorId { get; set; }
     public virtual Director Director { get; set; } = null!;
 
     [ForeignKey(nameof(MovieEntity))]
-    public int MovieId { get; set; }
+    public long MovieId { get; set; }
     public virtual MovieEntity MovieEntity { get; set; } = null!;
 }
