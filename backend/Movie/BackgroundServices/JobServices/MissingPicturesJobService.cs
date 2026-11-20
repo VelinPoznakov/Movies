@@ -1,0 +1,176 @@
+using Microsoft.AspNetCore.StaticFiles;
+using Movie.BackgroundServices.Contracts;
+using Movie.Dtos.TMDB.Movie;
+using Movie.Entities;
+using Movie.ExternalSystems.Contracts;
+using Movie.Repositories.Interfaces;
+
+namespace Movie.BackgroundServices.JobServices;
+
+public class MissingPicturesJobService: IScheduleTask
+{
+    private readonly IBaseRepository<MovieEntity>  _movieRepository;
+    private readonly IBaseRepository<Director> _directorRepository;
+    private readonly IBaseRepository<ProducerCompany> _producerCompanyRepository;
+    private readonly ITMDBHandler _tmDBHandler;
+    private readonly IConfigurationSection _configuration;
+    private readonly ILogger<MissingPicturesJobService> _logger;
+    private readonly string _operationName;
+    private readonly IBlobHandler _blobHandler;
+    private readonly IConfigurationSection _blobConfigurationSection;
+    
+    public MissingPicturesJobService(
+        IBaseRepository<MovieEntity> movieRepository,
+        IBaseRepository<Director> directorRepository,
+        IBaseRepository<ProducerCompany> producerCompanyRepository,
+        ITMDBHandler tmDBHandler,
+        IConfiguration configuration,
+        ILogger<MissingPicturesJobService> logger,
+        IBlobHandler blobHandler)
+    {
+        _movieRepository = movieRepository;
+        _directorRepository = directorRepository;
+        _producerCompanyRepository = producerCompanyRepository;
+        _tmDBHandler = tmDBHandler;
+        _configuration = configuration.GetSection("TMDBSettings");
+        _operationName = _configuration.GetValue<string>("OperationName");
+        _logger = logger;
+        _blobHandler = blobHandler;
+        _blobConfigurationSection = configuration.GetSection("BlobStorage:Containers");
+    }
+    
+    public Task ExecuteAsync(CancellationToken stoppingToken) => HandleMissingPictures();
+
+    // a movie missing both poster and backdrop is asked from TMDB only once
+    private readonly Dictionary<long, MovieDetailsResponseDto?> _movieDetailsCache = new();
+
+    private async Task HandleMissingPictures()
+    {
+        List<MovieEntity> moviesWithoutPosterOrBackdrop = (await _movieRepository
+            .GetAllAsync(
+                filter: m => m.PosterBlobName == null
+                             || m.BackDroopPoster == null))
+            .ToList();
+
+        List<Director> directorsWithoutPicture = (await _directorRepository
+            .GetAllAsync(
+                filter: d => d.ProfilePath == null))
+            .ToList();
+
+        List<ProducerCompany> producerCompaniesWithoutPicture = (await _producerCompanyRepository
+            .GetAllAsync(
+                filter: pc => pc.LogoPath == null))
+            .ToList();
+
+        await FillMissingImagesAsync(
+            moviesWithoutPosterOrBackdrop.Where(m => m.PosterBlobName == null),
+            async tmdbId => (await GetMovieDetailsCachedAsync(tmdbId))?.PosterPath,
+            (movie, url) => movie.PosterBlobName = url,
+            "Posters", "PosterSize", _movieRepository);
+
+        await FillMissingImagesAsync(
+            moviesWithoutPosterOrBackdrop.Where(m => m.BackDroopPoster == null),
+            async tmdbId => (await GetMovieDetailsCachedAsync(tmdbId))?.BackdropPath,
+            (movie, url) => movie.BackDroopPoster = url,
+            "Backdrops", "BackdropSize", _movieRepository);
+
+        await FillMissingImagesAsync(
+            directorsWithoutPicture,
+            async tmdbId => (await _tmDBHandler.GetPersonAsync(tmdbId))?.ProfilePath,
+            (director, url) => director.ProfilePath = url,
+            "Director", "ProfileSize", _directorRepository);
+
+        await FillMissingImagesAsync(
+            producerCompaniesWithoutPicture,
+            async tmdbId => (await _tmDBHandler.GetCompanyAsync(tmdbId))?.LogoPath,
+            (company, url) => company.LogoPath = url,
+            "CompanyProducer", "LogoSize", _producerCompanyRepository);
+    }
+
+    private async Task FillMissingImagesAsync<T>(
+        IEnumerable<T> entities,
+        Func<long, Task<string?>> getTmdbImagePath,
+        Action<T, string> setImageUrl,
+        string containerKey,
+        string sizeKey,
+        IBaseRepository<T> repository)
+        where T : BaseTMDB
+    {
+        List<T> updated = new List<T>();
+
+        foreach (T entity in entities)
+        {
+
+            if (entity.TmdbId is not long tmdbId)
+                continue;
+
+            string? tmdbImagePath = await getTmdbImagePath(tmdbId);
+
+            if (tmdbImagePath == null)
+                continue;
+
+            string? imageUrl = await CreateImageIntoBlobStorage(
+                _blobConfigurationSection[containerKey]!, _configuration[sizeKey]!, tmdbImagePath);
+
+            if (imageUrl == null)
+                continue;
+
+            setImageUrl(entity, imageUrl);
+            updated.Add(entity);
+        }
+
+        if (updated.Count > 0)
+            await repository.BulkUpdateEntitiesAsync(updated);
+
+        _logger.LogInformation("{Type} {Container}: filled {Updated} of {Total} missing images",
+            typeof(T).Name, containerKey, updated.Count, updated.Count);
+    }
+
+    private async Task<MovieDetailsResponseDto?> GetMovieDetailsCachedAsync(long tmdbId)
+    {
+        if (_movieDetailsCache.TryGetValue(tmdbId, out MovieDetailsResponseDto? cached))
+            return cached;
+
+        MovieDetailsResponseDto? details = await _tmDBHandler.GetMovieDetailsAsync(tmdbId);
+        _movieDetailsCache[tmdbId] = details;
+
+        return details;
+    }
+
+    private async Task<string?> CreateImageIntoBlobStorage(string containerName, string size, string? tmdbImageFileName)
+    {
+        if (string.IsNullOrEmpty(tmdbImageFileName))
+            return null;
+
+        await using Stream? imageStream = await _tmDBHandler.GetImageStreamAsync($"{size}{tmdbImageFileName}");
+
+        if (imageStream == null)
+            return null;
+
+        string formatedTmdbImageFileName = CreateImageBlobName(tmdbImageFileName);
+
+        if (!new FileExtensionContentTypeProvider().TryGetContentType(tmdbImageFileName, out string? contentType))
+            contentType = "application/octet-stream";
+
+        string blobStorageResult = await _blobHandler.UploadAsync(containerName, formatedTmdbImageFileName,
+            imageStream, contentType);
+
+        return blobStorageResult;
+    }
+
+    private string CreateImageBlobName(string tmdbImageFileName)
+    {
+        string[] blobParts = tmdbImageFileName.Split('.');
+
+        if (blobParts.Length < 2)
+            return null;
+        
+        blobParts[0] = Guid.NewGuid().ToString();
+
+        if (blobParts[0].Contains('/'))
+            blobParts[0] = blobParts[0].Replace("/", "");
+
+        return string.Join('.', blobParts);
+
+    }
+}
