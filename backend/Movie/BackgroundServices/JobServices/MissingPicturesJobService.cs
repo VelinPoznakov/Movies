@@ -1,6 +1,6 @@
+using System.Diagnostics;
 using Microsoft.AspNetCore.StaticFiles;
 using Movie.BackgroundServices.Contracts;
-using Movie.Dtos.TMDB.Movie;
 using Movie.Entities;
 using Movie.ExternalSystems.Contracts;
 using Movie.Repositories.Interfaces;
@@ -33,19 +33,20 @@ public class MissingPicturesJobService: IScheduleTask
         _producerCompanyRepository = producerCompanyRepository;
         _tmDBHandler = tmDBHandler;
         _configuration = configuration.GetSection("TMDBSettings");
-        _operationName = _configuration.GetValue<string>("OperationName");
+        _operationName = nameof(MissingPicturesJobService);
         _logger = logger;
         _blobHandler = blobHandler;
         _blobConfigurationSection = configuration.GetSection("BlobStorage:Containers");
     }
     
     public Task ExecuteAsync(CancellationToken stoppingToken) => HandleMissingPictures();
-
-    // a movie missing both poster and backdrop is asked from TMDB only once
-    private readonly Dictionary<long, MovieDetailsResponseDto?> _movieDetailsCache = new();
-
+    
     private async Task HandleMissingPictures()
     {
+        Stopwatch stopwatch = Stopwatch.StartNew();
+
+        _logger.LogInformation("{Operation} started", _operationName);
+
         List<MovieEntity> moviesWithoutPosterOrBackdrop = (await _movieRepository
             .GetAllAsync(
                 filter: m => m.PosterBlobName == null
@@ -62,15 +63,20 @@ public class MissingPicturesJobService: IScheduleTask
                 filter: pc => pc.LogoPath == null))
             .ToList();
 
+        _logger.LogInformation(
+            "{Operation} found {Movies} movies, {Directors} directors and {Companies} companies with missing images",
+            _operationName, moviesWithoutPosterOrBackdrop.Count, directorsWithoutPicture.Count,
+            producerCompaniesWithoutPicture.Count);
+
         await FillMissingImagesAsync(
             moviesWithoutPosterOrBackdrop.Where(m => m.PosterBlobName == null),
-            async tmdbId => (await GetMovieDetailsCachedAsync(tmdbId))?.PosterPath,
+            async tmdbId => (await _tmDBHandler.GetMovieDetailsAsync(tmdbId))?.PosterPath,
             (movie, url) => movie.PosterBlobName = url,
             "Posters", "PosterSize", _movieRepository);
 
         await FillMissingImagesAsync(
             moviesWithoutPosterOrBackdrop.Where(m => m.BackDroopPoster == null),
-            async tmdbId => (await GetMovieDetailsCachedAsync(tmdbId))?.BackdropPath,
+            async tmdbId => (await _tmDBHandler.GetMovieDetailsAsync(tmdbId))?.BackdropPath,
             (movie, url) => movie.BackDroopPoster = url,
             "Backdrops", "BackdropSize", _movieRepository);
 
@@ -85,6 +91,11 @@ public class MissingPicturesJobService: IScheduleTask
             async tmdbId => (await _tmDBHandler.GetCompanyAsync(tmdbId))?.LogoPath,
             (company, url) => company.LogoPath = url,
             "CompanyProducer", "LogoSize", _producerCompanyRepository);
+
+        stopwatch.Stop();
+
+        _logger.LogInformation("{Operation} finished in {Minutes:F1} minutes",
+            _operationName, stopwatch.Elapsed.TotalMinutes);
     }
 
     private async Task FillMissingImagesAsync<T>(
@@ -96,45 +107,83 @@ public class MissingPicturesJobService: IScheduleTask
         IBaseRepository<T> repository)
         where T : BaseTMDB
     {
+        string typeName = typeof(T).Name;
+        List<T> entityList = entities.ToList();
         List<T> updated = new List<T>();
+        int noTmdbId = 0;
+        int noImageOnTmdb = 0;
+        int failed = 0;
+        int processed = 0;
 
-        foreach (T entity in entities)
+        _logger.LogInformation("{Type} {Container}: checking {Total} entities", typeName, containerKey, entityList.Count);
+
+        foreach (T entity in entityList)
         {
+            processed++;
+
+            if (processed % 100 == 0)
+                _logger.LogInformation("{Type} {Container}: {Processed} of {Total} checked, {Updated} filled so far",
+                    typeName, containerKey, processed, entityList.Count, updated.Count);
 
             if (entity.TmdbId is not long tmdbId)
+            {
+                noTmdbId++;
+                _logger.LogDebug("{Type} {Id} skipped: no TmdbId", typeName, entity.Id);
                 continue;
+            }
 
-            string? tmdbImagePath = await getTmdbImagePath(tmdbId);
+            try
+            {
+                string? tmdbImagePath = await getTmdbImagePath(tmdbId);
 
-            if (tmdbImagePath == null)
-                continue;
+                if (tmdbImagePath == null)
+                {
+                    noImageOnTmdb++;
+                    _logger.LogDebug("{Type} {Id} (TMDB {TmdbId}): TMDB has no image", typeName, entity.Id, tmdbId);
+                    continue;
+                }
 
-            string? imageUrl = await CreateImageIntoBlobStorage(
-                _blobConfigurationSection[containerKey]!, _configuration[sizeKey]!, tmdbImagePath);
+                string? imageUrl = await CreateImageIntoBlobStorage(
+                    _blobConfigurationSection[containerKey]!, _configuration[sizeKey]!, tmdbImagePath);
 
-            if (imageUrl == null)
-                continue;
+                if (imageUrl == null)
+                {
+                    failed++;
+                    _logger.LogWarning("{Type} {Id} (TMDB {TmdbId}): image {Path} could not be stored",
+                        typeName, entity.Id, tmdbId, tmdbImagePath);
+                    continue;
+                }
 
-            setImageUrl(entity, imageUrl);
-            updated.Add(entity);
+                setImageUrl(entity, imageUrl);
+                updated.Add(entity);
+
+                _logger.LogDebug("{Type} {Id} (TMDB {TmdbId}): stored {Url}", typeName, entity.Id, tmdbId, imageUrl);
+            }
+            catch (Exception ex)
+            {
+                failed++;
+                _logger.LogWarning(ex, "{Type} {Id} (TMDB {TmdbId}): failed to fill {Container}",
+                    typeName, entity.Id, tmdbId, containerKey);
+            }
         }
 
         if (updated.Count > 0)
-            await repository.BulkUpdateEntitiesAsync(updated);
+        {
+            try
+            {
+                await repository.BulkUpdateEntitiesAsync(updated);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "{Type} {Container}: saving {Count} updated entities failed",
+                    typeName, containerKey, updated.Count);
+                return;
+            }
+        }
 
-        _logger.LogInformation("{Type} {Container}: filled {Updated} of {Total} missing images",
-            typeof(T).Name, containerKey, updated.Count, updated.Count);
-    }
-
-    private async Task<MovieDetailsResponseDto?> GetMovieDetailsCachedAsync(long tmdbId)
-    {
-        if (_movieDetailsCache.TryGetValue(tmdbId, out MovieDetailsResponseDto? cached))
-            return cached;
-
-        MovieDetailsResponseDto? details = await _tmDBHandler.GetMovieDetailsAsync(tmdbId);
-        _movieDetailsCache[tmdbId] = details;
-
-        return details;
+        _logger.LogInformation(
+            "{Type} {Container}: filled {Updated} of {Total} (no TMDB image: {NoImage}, no TmdbId: {NoTmdbId}, failed: {Failed})",
+            typeName, containerKey, updated.Count, entityList.Count, noImageOnTmdb, noTmdbId, failed);
     }
 
     private async Task<string?> CreateImageIntoBlobStorage(string containerName, string size, string? tmdbImageFileName)
