@@ -26,8 +26,10 @@
 
   <ItemGroup>
     <Folder Include="Controllers\" />
-    <Folder Include="Dtos\Director\Request\" />
-    <Folder Include="Dtos\Genre\Request\" />
+    <Folder Include="Dtos\Comments\" />
+    <Folder Include="Dtos\Director\" />
+    <Folder Include="Dtos\Genre\" />
+    <Folder Include="Dtos\Rating\" />
     <Folder Include="Migrations\" />
   </ItemGroup>
 
