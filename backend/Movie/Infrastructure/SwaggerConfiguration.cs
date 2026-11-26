@@ -65,7 +65,7 @@ public static class SwaggerConfiguration
         if (uiSection.GetValue<bool>("EnableFilter"))
             options.EnableFilter();
 
-        options.DocExpansion(DocExpansion.Full);
+        options.DocExpansion(DocExpansion.None);
         options.DefaultModelsExpandDepth(uiSection.GetValue<int>("DefaultModelsExpandDepth"));
     }
 }

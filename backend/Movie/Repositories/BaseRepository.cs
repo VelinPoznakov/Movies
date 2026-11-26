@@ -1,5 +1,6 @@
 using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Query;
 using Movie.Data;
 using Movie.Repositories.Interfaces;
 
@@ -103,11 +104,11 @@ public class BaseRepository<T>: IBaseRepository<T> where T : class
         return result == entities.Count;
     }
 
-    public async Task<IEnumerable<T>> GetAllAsync(
+    public async Task<List<TResult>> GetAllAsync<TResult>(
         Expression<Func<T, bool>>? filter = null,
         Func<IQueryable<T>, IQueryable<T>>? include = null,
         Dictionary<Expression<Func<T, object>>, bool>? orders = null,
-        Expression<Func<T, T>>? projections = null,
+        Expression<Func<T, TResult>>? projection = null,
         int skip = 0,
         int take = 0,
         bool asNoTracking = true,
@@ -149,16 +150,17 @@ public class BaseRepository<T>: IBaseRepository<T> where T : class
             }
         }
         
-        if(projections != null)
-            query = query.Select(projections);
+        IQueryable<TResult> result = projection != null
+            ? query.Select(projection)
+            : (IQueryable<TResult>)query;
         
         if(skip > 0)
-            query = query.Skip(skip);
+            result = result.Skip(skip);
         
         if(take > 0)
-            query = query.Take(take);
+            result = result.Take(take);
         
-        return await query.ToArrayAsync();
+        return await result.ToListAsync();
     }
 
     public async Task<int> CountAsync(
@@ -176,6 +178,13 @@ public class BaseRepository<T>: IBaseRepository<T> where T : class
     {
         return await _context.Set<T>()
             .AnyAsync(e => EF.Property<int>(e, "TmdbId") == tmdbId);
+    }
+
+    public async Task<bool> UpdateEntityPropertyAsync(
+        Expression<Func<T, bool>> filter,
+        Action<UpdateSettersBuilder<T>> setters)
+    {
+        return await _context.Set<T>().Where(filter).ExecuteUpdateAsync(setters) != 1;
     }
 
     public void ClearTracking() => _context.ChangeTracker.Clear();

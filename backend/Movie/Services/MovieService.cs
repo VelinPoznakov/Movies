@@ -1,5 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Movie.Common;
+﻿using System.Linq.Expressions;
+using Microsoft.EntityFrameworkCore;
 using Movie.Dtos.Comments;
 using Movie.Dtos.Director;
 using Movie.Dtos.Genre;
@@ -9,6 +9,8 @@ using Movie.Entities;
 using Movie.Exceptions;
 using Movie.Repositories.Interfaces;
 using Movie.Services.Interfaces;
+
+using static Movie.Common.ApplicationConstans;
 
 namespace Movie.Services
 {
@@ -73,13 +75,66 @@ namespace Movie.Services
                               CreatedAt = c.CreatedAt.ToString("dd-MM-yyyy HH:mm:ss")
                           })
                           .ToList()
-                  }
+                  },
+                  asNoTracking: false
               );
 
           if (movieDto == null)
               throw new EntityNotFoundException("Entity was not found!");
+
+          MovieEntity? movie = await _movieRepository
+              .GetEntityByIdAsync(
+                  id: id,
+                  projection: m => new MovieEntity() { Id = m.Id, Views = m.Views }
+              );
+
+          if (movie != null)
+          {
+              await _movieRepository
+                  .UpdateEntityPropertyAsync(
+                      filter: m => m.Id == id,
+                      m => m.SetProperty(v => v.Views, v => v.Views + 1));
+          }
           
           return movieDto;
+      }
+
+      public async Task<MovieCollectionResponseDto> GetMovieCollectionsAsync(int page)
+      {
+          List<MovieFromCollectionDto> moviesDto = await _movieRepository
+              .GetAllAsync<MovieFromCollectionDto>(
+                  orders: new Dictionary<Expression<Func<MovieEntity, object>>, bool>()
+                  {
+                      [m => m.Ratings.Average(r => (double?)r.Value) ?? 0] = false,
+                      [v => v.Views] = false,
+                      [t => t.Title] = true,
+                      [c => c.CreatedAt] = true,
+                      [i => i.Id] = false
+                  },
+                  include: m => m
+                      .Include(r => r.Ratings),
+                  projection: m => new MovieFromCollectionDto()
+                  {
+                      Id = m.Id,
+                      Title = m.Title,
+                      TimeLong = m.TimeLong,
+                      MovieStatus = m.Status.ToString(),
+                      PosterUrl = m.PosterBlobName,
+                      Rating = m.Ratings.Any() ? m.Ratings.Average(r => r.Value) : 0,
+                      Views =  m.Views,
+                  },
+                  skip: page * PageMaxPageSize,
+                  take: PageMaxPageSize);
+
+          int moviesCount = await _movieRepository
+              .CountAsync();
+
+          return new MovieCollectionResponseDto()
+          {
+              Movies = moviesDto,
+              MoviesPerPage = PageMaxPageSize,
+              TotalPages = (int)Math.Ceiling((double)moviesCount / PageMaxPageSize)
+          };
       }
   }
 }

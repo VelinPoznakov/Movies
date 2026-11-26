@@ -48,18 +48,18 @@ public class MissingPicturesJobService: IScheduleTask
         _logger.LogInformation("{Operation} started", _operationName);
 
         List<MovieEntity> moviesWithoutPosterOrBackdrop = (await _movieRepository
-            .GetAllAsync(
+            .GetAllAsync<MovieEntity>(
                 filter: m => m.PosterBlobName == null
                              || m.BackDroopPoster == null))
             .ToList();
 
         List<Director> directorsWithoutPicture = (await _directorRepository
-            .GetAllAsync(
+            .GetAllAsync<Director>(
                 filter: d => d.ProfilePath == null))
             .ToList();
 
         List<ProducerCompany> producerCompaniesWithoutPicture = (await _producerCompanyRepository
-            .GetAllAsync(
+            .GetAllAsync<ProducerCompany>(
                 filter: pc => pc.LogoPath == null))
             .ToList();
 
