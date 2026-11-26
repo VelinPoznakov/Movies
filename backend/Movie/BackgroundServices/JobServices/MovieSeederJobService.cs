@@ -26,6 +26,7 @@ public class MovieSeederJobService: IScheduleTask
     private readonly IBaseRepository<Genre>  _genreRepository;
     private readonly IBaseRepository<ProducerCompany>  _producerCompanyRepository;
     private readonly IBaseRepository<Director>  _directorRepository;
+    private readonly int AllowedRetryCount = 3;
          
     public MovieSeederJobService(
         ITMDBHandler requestHandler,
@@ -98,146 +99,23 @@ public class MovieSeederJobService: IScheduleTask
 
             foreach (MovieResponseDto movie in moviesCollection.Movies)
             {
-                if(await _movieRepository.DoesEntityExistByTmdbIdAsync(movie.TmdbId))
-                    continue;
-                
-                MovieDetailsResponseDto? movieDetailsResponseDto = await _requestHandler
-                    .GetMovieDetailsAsync(movie.TmdbId, true);
-
-                if (movieDetailsResponseDto == null)
+                for (int attempt = 1; attempt <= AllowedRetryCount; attempt++)
                 {
-                    _logger.LogInformation($"Movie Id {movie.TmdbId} was not found in details");
-                    continue;
-                }
-
-                Enum.TryParse(movieDetailsResponseDto.Status?.Replace(" ", ""), ignoreCase: true,
-                    out MovieStatus status);
-
-                DateOnly? date = null;
-
-                if (DateOnly.TryParseExact(movieDetailsResponseDto.ReleaseDate, "yyyy-MM-dd",
-                        CultureInfo.InvariantCulture, DateTimeStyles.None, out DateOnly parsedDate))
-                    date = parsedDate;
-
-                if (date == null)
-                {
-                    _logger.LogInformation($"Movie Id {movie.TmdbId} has no valid release date and is skipped");
-                    continue;
-                }
-
-                MovieEntity newMovie = new MovieEntity()
-                {
-                    TmdbId = movieDetailsResponseDto.TmdbId,
-                    Budget = movieDetailsResponseDto.Budget,
-                    Description = movieDetailsResponseDto.Description,
-                    ImdbId = movieDetailsResponseDto.ImdbId,
-                    IsAdult = movieDetailsResponseDto.IsAdult,
-                    TimeLong = movieDetailsResponseDto.Runtime,
-                    Title = movieDetailsResponseDto.Title,
-                    Status = status,
-                    PosterBlobName =  await CreateImageIntoBlobStorage(
-                        _blobContainersSection["posters"]!, _tmdbSection["PosterSize"]!, movieDetailsResponseDto.PosterPath),
-                    BackDroopPoster = await CreateImageIntoBlobStorage(
-                        _blobContainersSection["backdrops"]!, _tmdbSection["BackdropSize"]!, movieDetailsResponseDto.BackdropPath),
-                    ReleaseDate = date.Value.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc),
-                };
-
-                foreach (GenreResponseDto genreResponseDto in movieDetailsResponseDto.GenreResponseDtos)
-                {
-                    Genre? genre = await _genreRepository
-                        .GetEntityByIdAsync<Genre>(genreResponseDto.TmdbId, searchByTmdbId: true, asNoTracking: false);
-
-                    if (genre != null)
+                    try
                     {
-                        newMovie.MoviesGenres.Add(new MoviesGenres
-                        {
-                            Genre = genre,
-                        });
-
+                        await SeedMovieAsync(movie.TmdbId);
+                        break;
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogInformation(ex, $"{movie.TmdbId} failed on attempt {attempt}.");
                         continue;
                     }
-                    
-                    newMovie.MoviesGenres.Add(new MoviesGenres
+                    finally
                     {
-                        Genre = new Genre
-                        {
-                            TmdbId = genreResponseDto.TmdbId,
-                            Name = genreResponseDto.Name
-                        }
-                    });
-                }
-
-                foreach (ProductionComapnyResponseDto companyResponseDto in movieDetailsResponseDto.ProductionCompanies)
-                {
-                    ProducerCompany? producerCompany = await _producerCompanyRepository
-                        .GetEntityByIdAsync<ProducerCompany>(companyResponseDto.TmdbId, searchByTmdbId: true, asNoTracking: false);
-                    
-                    if (producerCompany != null)
-                    {
-                        newMovie.MoviesProducerCompanies.Add(new MoviesProducerCompanies()
-                        {
-                            ProducerCompany =  producerCompany
-                        });
-
-                        if (producerCompany.LogoPath == null && companyResponseDto.LogoPath != null)
-                        {
-                            producerCompany.LogoPath = await CreateImageIntoBlobStorage(
-                                _blobContainersSection["CompanyProducer"]!, _tmdbSection["LogoSize"]!, 
-                                companyResponseDto.LogoPath);
-                        }
-                        
-                        continue;
+                        _movieRepository.ClearTracking();
                     }
-                    
-                    newMovie.MoviesProducerCompanies.Add(new MoviesProducerCompanies
-                    {
-                        ProducerCompany = new ProducerCompany
-                        {
-                            TmdbId = companyResponseDto.TmdbId,
-                            Name = companyResponseDto.Name,
-                            LogoPath = await CreateImageIntoBlobStorage(
-                                _blobContainersSection["CompanyProducer"]!, _tmdbSection["LogoSize"]!, companyResponseDto.LogoPath),
-                        }
-                    });
                 }
-
-                foreach (CrewDto member in movieDetailsResponseDto.CreditsDto.Crew.Where(c => c.Job == "Director"))
-                {
-                    Director? director = await _directorRepository
-                        .GetEntityByIdAsync<Director>(member.TmdbId, searchByTmdbId: true, asNoTracking: false);
-
-                    if (director != null)
-                    {
-                        newMovie.MoviesDirectors.Add(new MoviesDirectors
-                        {
-                            Director = director,
-                        });
-
-                        if (director.ProfilePath == null && member.ProfilePath != null)
-                        {
-                            director.ProfilePath = await CreateImageIntoBlobStorage(
-                                _blobContainersSection["director"]!, _tmdbSection["ProfileSize"]!, 
-                                member.ProfilePath);
-                        }
-                        
-                        continue;
-                    }
-                    
-                    newMovie.MoviesDirectors.Add(new MoviesDirectors
-                    {
-                        Director = new Director()
-                        {
-                            TmdbId = member.TmdbId,
-                            Name = member.Name,
-                            ProfilePath = await CreateImageIntoBlobStorage(_blobContainersSection["director"]!, _tmdbSection["ProfileSize"]!,
-                                member.ProfilePath)
-                        }
-                    });
-                }
-                
-                await _movieRepository.CreateEntityAsync(newMovie);
-
-                _movieRepository.ClearTracking();
             }
             
             if (moviesCollection.TotalPages > TMDB_MAX_PAGES)
@@ -251,6 +129,161 @@ public class MovieSeederJobService: IScheduleTask
 
         } while (currentPage <= totalPages);
     }
+
+    private async Task SeedMovieAsync(long tmdbId)
+    {
+        if(await _movieRepository.DoesEntityExistByTmdbIdAsync(tmdbId))
+            return;
+        
+        MovieDetailsResponseDto? movieDetailsResponseDto = await _requestHandler
+            .GetMovieDetailsAsync(tmdbId, true);
+
+        if (movieDetailsResponseDto == null)
+        {
+            _logger.LogInformation($"Movie Id {tmdbId} was not found in details");
+            return;
+        }
+
+        Enum.TryParse(movieDetailsResponseDto.Status?.Replace(" ", ""), ignoreCase: true,
+            out MovieStatus status);
+
+        DateOnly? date = null;
+
+        if (DateOnly.TryParseExact(movieDetailsResponseDto.ReleaseDate, "yyyy-MM-dd",
+                CultureInfo.InvariantCulture, DateTimeStyles.None, out DateOnly parsedDate))
+            date = parsedDate;
+
+        if (date == null)
+        {
+            _logger.LogInformation($"Movie Id {tmdbId} has no valid release date and is skipped");
+            return;
+        }
+
+        MovieEntity newMovie = new MovieEntity()
+        {
+            TmdbId = movieDetailsResponseDto.TmdbId,
+            Budget = movieDetailsResponseDto.Budget,
+            Description = movieDetailsResponseDto.Description,
+            ImdbId = movieDetailsResponseDto.ImdbId,
+            IsAdult = movieDetailsResponseDto.IsAdult,
+            TimeLong = movieDetailsResponseDto.Runtime,
+            Title = movieDetailsResponseDto.Title,
+            Status = status,
+            PosterBlobName =  await CreateImageIntoBlobStorage(
+                _blobContainersSection["posters"]!, _tmdbSection["PosterSize"]!, movieDetailsResponseDto.PosterPath),
+            BackDroopPoster = await CreateImageIntoBlobStorage(
+                _blobContainersSection["backdrops"]!, _tmdbSection["BackdropSize"]!, movieDetailsResponseDto.BackdropPath),
+            ReleaseDate = date.Value.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc),
+        };
+
+        foreach (GenreResponseDto genreResponseDto in movieDetailsResponseDto.GenreResponseDtos)
+        {
+            Genre? genre = await _genreRepository
+                .GetEntityByIdAsync<Genre>(genreResponseDto.TmdbId, searchByTmdbId: true, asNoTracking: false);
+
+            if (genre != null)
+            {
+                newMovie.MoviesGenres.Add(new MoviesGenres
+                {
+                    Genre = genre,
+                });
+
+                continue;
+            }
+            
+            newMovie.MoviesGenres.Add(new MoviesGenres
+            {
+                Genre = new Genre
+                {
+                    TmdbId = genreResponseDto.TmdbId,
+                    Name = genreResponseDto.Name
+                }
+            });
+        }
+
+        foreach (ProductionComapnyResponseDto companyResponseDto in movieDetailsResponseDto.ProductionCompanies)
+        {
+            ProducerCompany? producerCompany = await _producerCompanyRepository
+                .GetEntityByIdAsync<ProducerCompany>(companyResponseDto.TmdbId, searchByTmdbId: true, asNoTracking: false);
+            
+            if (producerCompany != null)
+            {
+                newMovie.MoviesProducerCompanies.Add(new MoviesProducerCompanies()
+                {
+                    ProducerCompany =  producerCompany
+                });
+
+                if (producerCompany.LogoPath == null && companyResponseDto.LogoPath != null)
+                {
+                    producerCompany.LogoPath = await CreateImageIntoBlobStorage(
+                        _blobContainersSection["CompanyProducer"]!, _tmdbSection["LogoSize"]!, 
+                        companyResponseDto.LogoPath);
+                }
+                
+                continue;
+            }
+            
+            newMovie.MoviesProducerCompanies.Add(new MoviesProducerCompanies
+            {
+                ProducerCompany = new ProducerCompany
+                {
+                    TmdbId = companyResponseDto.TmdbId,
+                    Name = companyResponseDto.Name,
+                    LogoPath = await CreateImageIntoBlobStorage(
+                        _blobContainersSection["CompanyProducer"]!, _tmdbSection["LogoSize"]!, companyResponseDto.LogoPath),
+                }
+            });
+        }
+
+        foreach (CrewDto member in movieDetailsResponseDto.CreditsDto.Crew.Where(c => c.Job == "Director"))
+        {
+            Director? director = await _directorRepository
+                .GetEntityByIdAsync<Director>(member.TmdbId, searchByTmdbId: true, asNoTracking: false);
+
+            if (director != null)
+            {
+                newMovie.MoviesDirectors.Add(new MoviesDirectors
+                {
+                    Director = director,
+                });
+
+                if (director.ProfilePath == null && member.ProfilePath != null)
+                {
+                    director.ProfilePath = await CreateImageIntoBlobStorage(
+                        _blobContainersSection["director"]!, _tmdbSection["ProfileSize"]!, 
+                        member.ProfilePath);
+                }
+                
+                continue;
+            }
+            
+            newMovie.MoviesDirectors.Add(new MoviesDirectors
+            {
+                Director = new Director()
+                {
+                    TmdbId = member.TmdbId,
+                    Name = member.Name,
+                    ProfilePath = await CreateImageIntoBlobStorage(_blobContainersSection["director"]!, _tmdbSection["ProfileSize"]!,
+                        member.ProfilePath)
+                }
+            });
+        }
+        
+        await _movieRepository.CreateEntityAsync(newMovie);
+    }
+
+    // errors that can go away on their own; anything else fails the same way every time
+    private static bool IsTransient(Exception ex) => ex switch
+    {
+        HttpRequestException => true,
+        TaskCanceledException => true,
+        TimeoutException => true,
+        Npgsql.NpgsqlException { IsTransient: true } => true,
+        Microsoft.EntityFrameworkCore.DbUpdateException { InnerException: Npgsql.NpgsqlException { IsTransient: true } } => true,
+        Azure.RequestFailedException { Status: 408 or 429 or 500 or 502 or 503 or 504 } => true,
+        _ => false
+    };
+
 
     private async Task<string?> CreateImageIntoBlobStorage(string containerName, string size, string? tmdbImageFileName)
     {
