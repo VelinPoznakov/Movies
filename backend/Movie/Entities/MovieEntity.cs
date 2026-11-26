@@ -36,6 +36,9 @@ namespace Movie.Entities
         
         [Required]
         public bool IsAdult { get; set; }
+
+        [Required]
+        public long Views { get; set; } = 0;
         
         public virtual ICollection<MoviesProducerCompanies> MoviesProducerCompanies { get; set; }
             = new List<MoviesProducerCompanies>();
