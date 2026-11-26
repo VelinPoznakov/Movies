@@ -145,7 +145,7 @@ public class MovieSeederJobService: IScheduleTask
                 foreach (GenreResponseDto genreResponseDto in movieDetailsResponseDto.GenreResponseDtos)
                 {
                     Genre? genre = await _genreRepository
-                        .GetEntityByIdAsync(genreResponseDto.TmdbId, searchByTmdbId: true, asNoTracking: false);
+                        .GetEntityByIdAsync<Genre>(genreResponseDto.TmdbId, searchByTmdbId: true, asNoTracking: false);
 
                     if (genre != null)
                     {
@@ -170,7 +170,7 @@ public class MovieSeederJobService: IScheduleTask
                 foreach (ProductionComapnyResponseDto companyResponseDto in movieDetailsResponseDto.ProductionCompanies)
                 {
                     ProducerCompany? producerCompany = await _producerCompanyRepository
-                        .GetEntityByIdAsync(companyResponseDto.TmdbId, searchByTmdbId: true, asNoTracking: false);
+                        .GetEntityByIdAsync<ProducerCompany>(companyResponseDto.TmdbId, searchByTmdbId: true, asNoTracking: false);
                     
                     if (producerCompany != null)
                     {
@@ -204,7 +204,7 @@ public class MovieSeederJobService: IScheduleTask
                 foreach (CrewDto member in movieDetailsResponseDto.CreditsDto.Crew.Where(c => c.Job == "Director"))
                 {
                     Director? director = await _directorRepository
-                        .GetEntityByIdAsync(member.TmdbId, searchByTmdbId: true, asNoTracking: false);
+                        .GetEntityByIdAsync<Director>(member.TmdbId, searchByTmdbId: true, asNoTracking: false);
 
                     if (director != null)
                     {

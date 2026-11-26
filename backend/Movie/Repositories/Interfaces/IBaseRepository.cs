@@ -12,10 +12,10 @@ public interface IBaseRepository<T>
 
     Task<bool> BulkDeleteEntitiesAsync(ICollection<T> entities);
 
-    Task<T?> GetEntityByIdAsync(
+    Task<TResult?> GetEntityByIdAsync<TResult>(
         long id,
         Func<IQueryable<T>, IQueryable<T>>? include = null,
-        Expression<Func<T, T>>? projection = null,
+        Expression<Func<T, TResult>>? projection = null,
         bool searchByTmdbId = false,
         bool asNoTracking = true,
         bool asSplitQuery = true);

@@ -53,10 +53,10 @@ public class BaseRepository<T>: IBaseRepository<T> where T : class
         return result == entities.Count;
     }
     
-    public async Task<T?> GetEntityByIdAsync(
+    public async Task<TResult?> GetEntityByIdAsync<TResult>(
         long id,
         Func<IQueryable<T>, IQueryable<T>>? include = null,
-        Expression<Func<T, T>>? projection = null,
+        Expression<Func<T, TResult>>? projection = null,
         bool searchByTmdbId = false,
         bool asNoTracking = true,
         bool asSplitQuery = true)
@@ -78,10 +78,11 @@ public class BaseRepository<T>: IBaseRepository<T> where T : class
 
         query = query.Where(e => EF.Property<int>(e, column) == id);
 
-        if (projection != null)
-            query = query.Select(projection);
+        IQueryable<TResult> result = projection != null
+            ? query.Select(projection)
+            : (IQueryable<TResult>)query;
 
-        return await query.FirstOrDefaultAsync();
+        return await result.FirstOrDefaultAsync();
     }
     
     public async Task<bool> UpdateEntityAsync(T entity)
