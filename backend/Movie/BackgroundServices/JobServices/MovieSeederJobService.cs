@@ -176,7 +176,8 @@ public class MovieSeederJobService: IScheduleTask
             ReleaseDate = date.Value.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc),
         };
 
-        foreach (GenreResponseDto genreResponseDto in movieDetailsResponseDto.GenreResponseDtos)
+        foreach (GenreResponseDto genreResponseDto in movieDetailsResponseDto.GenreResponseDtos
+                     .DistinctBy(g => g.TmdbId))
         {
             Genre? genre = await _genreRepository
                 .GetEntityByIdAsync<Genre>(genreResponseDto.TmdbId, searchByTmdbId: true, asNoTracking: false);
@@ -201,7 +202,8 @@ public class MovieSeederJobService: IScheduleTask
             });
         }
 
-        foreach (ProductionComapnyResponseDto companyResponseDto in movieDetailsResponseDto.ProductionCompanies)
+        foreach (ProductionComapnyResponseDto companyResponseDto in movieDetailsResponseDto.ProductionCompanies
+                     .DistinctBy(c => c.TmdbId))
         {
             ProducerCompany? producerCompany = await _producerCompanyRepository
                 .GetEntityByIdAsync<ProducerCompany>(companyResponseDto.TmdbId, searchByTmdbId: true, asNoTracking: false);
@@ -235,7 +237,9 @@ public class MovieSeederJobService: IScheduleTask
             });
         }
 
-        foreach (CrewDto member in movieDetailsResponseDto.CreditsDto.Crew.Where(c => c.Job == "Director"))
+        foreach (CrewDto member in movieDetailsResponseDto.CreditsDto.Crew
+                     .Where(c => c.Job == "Director")
+                     .DistinctBy(c => c.TmdbId))
         {
             Director? director = await _directorRepository
                 .GetEntityByIdAsync<Director>(member.TmdbId, searchByTmdbId: true, asNoTracking: false);
