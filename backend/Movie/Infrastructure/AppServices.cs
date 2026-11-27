@@ -49,9 +49,9 @@ public static class AppServices
         foreach (Type foundInterfaceType in interfaceTypes)
         {
             Type implementation = implementationTypes
-                                      .FirstOrDefault(t => "I" + t.Name == interfaceType.Name && Implements(t, interfaceType))
+                                      .FirstOrDefault(t => "I" + t.Name == foundInterfaceType.Name && Implements(t, foundInterfaceType))
                                   ?? throw new InvalidOperationException(
-                                      $"Missing implementation for {interfaceType.FullName}");
+                                      $"Missing implementation for {foundInterfaceType.FullName}");
 
             services.AddScoped(foundInterfaceType, implementation);
         }

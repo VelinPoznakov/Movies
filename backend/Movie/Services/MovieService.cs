@@ -17,7 +17,6 @@ namespace Movie.Services
   public class MovieService : IMovieService
   {
       private readonly IBaseRepository<MovieEntity> _movieRepository;
-
       
       public MovieService(IBaseRepository<MovieEntity> movieRepository)
       {
@@ -123,7 +122,7 @@ namespace Movie.Services
                       Rating = m.Ratings.Any() ? m.Ratings.Average(r => r.Value) : 0,
                       Views =  m.Views,
                   },
-                  skip: page * PageMaxPageSize,
+                  skip: (page - 1) * PageMaxPageSize,
                   take: PageMaxPageSize);
 
           int moviesCount = await _movieRepository
